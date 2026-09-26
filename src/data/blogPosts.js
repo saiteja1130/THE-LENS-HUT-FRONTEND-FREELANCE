@@ -1,0 +1,40 @@
+export const BLOG_POSTS = [{
+  id: 'bp-01',
+  slug: 'how-to-choose-the-right-glasses-for-your-face-shape',
+  title: 'How to Choose the Right Glasses for Your Face Shape: The 2026 Optical Guide',
+  excerpt: 'Find your ideal frame proportion, whether your facial geometry is oval, square, heart, or diamond. Master balanced angles and browline alignment.',
+  content: ['Finding the perfect pair of eyeglasses is an art form rooted in geometric contrast. The golden rule of optical styling is counter-balance: soft curves balance sharp jawlines, while clean rectilinear geometry adds definition to rounded features.', 'For Round Faces: Rectangular, square, or geometric frames such as our Apex Octagonal add crisp architectural lines and elongate facial proportions.', 'For Square Faces: Round and soft oval silhouettes like the Lumina Round soften angular cheekbones and strong jaw structures.', 'For Heart Faces: Frames with wider bottoms or subtle cat-eyes draw attention outward and downwards to balance broad foreheads.', 'For Oval Faces: Lucky you — nearly every frame silhouette from classic pilots to bold browlines compliments naturally balanced facial symmetry.'],
+  category: 'Style & Fitting',
+  author: 'Dr. Aris Thorne',
+  authorRole: 'Chief Optometrist & Style Director',
+  date: 'March 18, 2026',
+  readTime: '5 min read',
+  image: 'https://images.unsplash.com/photo-1591076482161-42ce6da69f68?q=80&w=800&auto=format&fit=crop',
+  tags: ['Face Shapes', 'Frame Guide', 'Eyewear Trends']
+}, {
+  id: 'bp-02',
+  slug: 'complete-guide-to-contact-lens-care-and-hygiene',
+  title: 'Complete Guide to Contact Lens Care, Comfort and Safe Wear',
+  excerpt: 'Essential daily habits to protect your corneal health, prevent dry eye syndrome from screen fatigue, and keep your contact lenses crisp and clear.',
+  content: ['Contact lenses afford unmatched peripheral vision and athletic freedom, but sound lens hygiene is the foundation of lifelong ocular comfort.', 'Always wash hands with fragrance-free antibacterial soap and lint-free drying before touching your eyes.', 'Never expose soft contact lenses to tap water or shower moisture — water carries microscopic Acanthamoeba parasites that can lead to severe infections.', 'Adhere strictly to replacement schedules. Daily disposables like Aqua-Hydro are formulated for pristine single-day wear and should never be slept in.', 'If you encounter digital fatigue, try the 20-20-20 rule: every 20 minutes look 20 feet away for 20 seconds while blinking intentionally.'],
+  category: 'Eye Health',
+  author: 'Dr. Priya Sen',
+  authorRole: 'Consultant Clinical Optometrist',
+  date: 'February 24, 2026',
+  readTime: '4 min read',
+  image: 'https://images.unsplash.com/photo-1574258495973-f010dfbb5371?q=80&w=800&auto=format&fit=crop',
+  tags: ['Contact Lenses', 'Eye Hygiene', 'Digital Eye Strain']
+}, {
+  id: 'bp-03',
+  slug: 'polarized-vs-non-polarized-sunglasses-truth',
+  title: 'Polarized vs Non-Polarized Lenses: Which Do You Actually Need?',
+  excerpt: 'Understand how horizontal light wave filtering works on highways, water surfaces, and snowy terrains — and when non-polarized lenses might be better.',
+  content: ['When daylight reflects off flat surfaces like wet highway asphalt, car windshields, or lake water, light waves vibrate horizontally creating intense glare that blinds normal vision.', 'Polarized lenses integrate a microscopic chemical filter laminated with vertical slit alignments. This effectively blocks 99.9% of horizontal blinding glare.', 'Ideal scenarios for Polarized Eyewear: Highway driving during bright afternoons, water sports, angling, and high-altitude hiking.', 'When to prefer Non-Polarized: Viewing digital LCD screens, aircraft cockpit instrumentation, or specialized motorcycle visor displays.'],
+  category: 'Lens Technology',
+  author: 'Vikramaditya Nair',
+  authorRole: 'Optical Materials Engineer',
+  date: 'January 15, 2026',
+  readTime: '6 min read',
+  image: 'https://images.unsplash.com/photo-1511499767150-a48a237f0083?q=80&w=800&auto=format&fit=crop',
+  tags: ['Polarized', 'Sunglasses', 'UV Protection']
+}];

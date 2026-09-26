@@ -1,0 +1,6 @@
+{
+  "name": "The Lens Hut — Premium Eyewear & Sunglasses",
+  "description": "Better Vision, Brighter Tomorrow. Explore designer eyeglasses, luxury sunglasses, daily contact lenses and optical accessories at The Lens Hut.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
