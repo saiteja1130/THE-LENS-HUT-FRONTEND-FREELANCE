@@ -26,19 +26,15 @@ export const Checkout = () => {
 
   const navigate = useNavigate();
 
-  // Address and contact state
-  const defaultAddr = user?.addresses?.find((a) => a.isDefault) || user?.addresses?.[0];
+  // Contact & delivery address form state
   const [contactEmail, setContactEmail] = useState(user?.email || '');
   const [contactPhone, setContactPhone] = useState(user?.phone || '');
-  const [isEditingContact, setIsEditingContact] = useState(!user);
-
-  const [fullName, setFullName] = useState(defaultAddr?.fullName || user?.name || '');
-  const [street, setStreet] = useState(defaultAddr?.street || '');
-  const [locality, setLocality] = useState(defaultAddr?.locality || '');
-  const [city, setCity] = useState(defaultAddr?.city || '');
-  const [state, setState] = useState(defaultAddr?.state || '');
-  const [pincode, setPincode] = useState(defaultAddr?.pincode || '');
-  const [isEditingAddress, setIsEditingAddress] = useState(!defaultAddr);
+  const [fullName, setFullName] = useState(user?.name || '');
+  const [street, setStreet] = useState('');
+  const [locality, setLocality] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [pincode, setPincode] = useState('');
 
   // Shipping & Payment selection matching screenshot
   const [shippingMethod, setShippingMethod] = useState('standard');
@@ -167,8 +163,23 @@ export const Checkout = () => {
 
     await new Promise((r) => setTimeout(r, 800));
 
+    const orderItemsSnapshot = displayItems.map((item) => ({
+      productId: item.productId || item.product?.id,
+      productType: item.productType || item.configuration?.productType || 'eyeglasses',
+      name: item.product?.name || item.productSnapshot?.name,
+      brand: item.product?.brand || item.productSnapshot?.brand || 'The Lens Hut',
+      sku: item.product?.sku || item.productSnapshot?.sku || 'LH-OPTICAL',
+      image: item.product?.colors?.[0]?.image || item.product?.primaryImage || item.product?.image || item.productSnapshot?.image,
+      configuration: item.configuration || {},
+      selectedColor: item.selectedColor || item.configuration?.variantName || 'Standard',
+      selectedSize: item.selectedSize || 'Standard',
+      unitPrice: item.unitPrice || item.product?.price || 0,
+      quantity: item.quantity || 1,
+      totalPrice: (item.unitPrice || item.product?.price || 0) * (item.quantity || 1)
+    }));
+
     const newOrder = placeOrder({
-      items: [...displayItems],
+      items: orderItemsSnapshot,
       shippingAddress,
       paymentMethod: paymentLabel,
       subtotal,
@@ -300,45 +311,35 @@ export const Checkout = () => {
                 </h2>
               </div>
 
-              <div className="bg-white border border-slate-200/90 rounded-xl p-3.5 sm:p-4 transition-all">
-                {isEditingContact ? (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                        Email Address
-                      </label>
-                      <input
-                        type="email"
-                        value={contactEmail}
-                        onChange={(e) => setContactEmail(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
-                        required
-                      />
-                    </div>
-                    <div className="flex justify-end">
-                      <button
-                        type="button"
-                        onClick={() => setIsEditingContact(false)}
-                        className="px-4 py-1.5 bg-[#14232E] text-white text-xs font-semibold rounded-lg hover:bg-[#0b1622] transition-colors cursor-pointer"
-                      >
-                        Save
-                      </button>
-                    </div>
+              <div className="bg-white border border-slate-200/90 rounded-xl p-4 sm:p-5 transition-all">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                      Email Address *
+                    </label>
+                    <input
+                      type="email"
+                      value={contactEmail}
+                      onChange={(e) => setContactEmail(e.target.value)}
+                      placeholder="e.g. name@example.com"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
+                      required
+                    />
                   </div>
-                ) : (
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs sm:text-sm text-slate-700 font-medium">
-                      {contactEmail}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setIsEditingContact(true)}
-                      className="text-xs font-semibold text-slate-500 hover:text-[#14232E] transition-colors cursor-pointer"
-                    >
-                      Change
-                    </button>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                      Phone Number *
+                    </label>
+                    <input
+                      type="tel"
+                      value={contactPhone}
+                      onChange={(e) => setContactPhone(e.target.value)}
+                      placeholder="e.g. +91 98765 43210"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
+                      required
+                    />
                   </div>
-                )}
+                </div>
               </div>
             </div>
 
@@ -351,104 +352,93 @@ export const Checkout = () => {
                   </span>
                   <span>Delivery Address</span>
                 </h2>
-                {!isEditingAddress && (
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingAddress(true)}
-                    className="text-xs font-bold text-[#E4232C] hover:underline cursor-pointer"
-                  >
-                    Change
-                  </button>
-                )}
               </div>
 
-              <div className="bg-white border border-slate-200/90 rounded-xl p-4 sm:p-5 transition-all">
-                {isEditingAddress ? (
-                  <div className="space-y-3">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                          Full Name
-                        </label>
-                        <input
-                          type="text"
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                          Pincode
-                        </label>
-                        <input
-                          type="text"
-                          value={pincode}
-                          onChange={(e) => setPincode(e.target.value)}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                        House No. / Flat / Street
-                      </label>
-                      <input
-                        type="text"
-                        value={street}
-                        onChange={(e) => setStreet(e.target.value)}
-                        className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
-                        required
-                      />
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                          City
-                        </label>
-                        <input
-                          type="text"
-                          value={city}
-                          onChange={(e) => setCity(e.target.value)}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-                          State
-                        </label>
-                        <input
-                          type="text"
-                          value={state}
-                          onChange={(e) => setState(e.target.value)}
-                          className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
-                          required
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end pt-1">
-                      <button
-                        type="button"
-                        onClick={() => setIsEditingAddress(false)}
-                        className="px-4 py-1.5 bg-[#14232E] text-white text-xs font-semibold rounded-lg hover:bg-[#0b1622] transition-colors cursor-pointer"
-                      >
-                        Save Address
-                      </button>
-                    </div>
+              <div className="bg-white border border-slate-200/90 rounded-xl p-4 sm:p-5 transition-all space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                      Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Recipient's full name"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
+                      required
+                    />
                   </div>
-                ) : (
-                  <div className="space-y-1">
-                    <div className="text-xs sm:text-sm font-bold text-[#14232E]">
-                      {fullName}
-                    </div>
-                    <div className="text-xs text-slate-500 leading-relaxed">
-                      {street}, {locality ? `${locality}, ` : ''}{city}, {state} - {pincode}
-                    </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                      Pincode *
+                    </label>
+                    <input
+                      type="text"
+                      value={pincode}
+                      onChange={(e) => setPincode(e.target.value)}
+                      placeholder="6-digit PIN code"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
+                      required
+                    />
                   </div>
-                )}
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                    House No. / Flat / Building / Street *
+                  </label>
+                  <input
+                    type="text"
+                    value={street}
+                    onChange={(e) => setStreet(e.target.value)}
+                    placeholder="Flat/House no., Floor, Building, Street name"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                    Area / Locality / Landmark
+                  </label>
+                  <input
+                    type="text"
+                    value={locality}
+                    onChange={(e) => setLocality(e.target.value)}
+                    placeholder="Near landmark, sector, or locality (optional)"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                      City / District *
+                    </label>
+                    <input
+                      type="text"
+                      value={city}
+                      onChange={(e) => setCity(e.target.value)}
+                      placeholder="e.g. Mumbai / Bangalore / Hyderabad"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                      State *
+                    </label>
+                    <input
+                      type="text"
+                      value={state}
+                      onChange={(e) => setState(e.target.value)}
+                      placeholder="e.g. Maharashtra / Karnataka / Telangana"
+                      className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -556,19 +546,21 @@ export const Checkout = () => {
                     item.product?.colors?.[0]?.image ||
                     item.product?.primaryImage ||
                     item.product?.image ||
+                    item.productSnapshot?.image ||
                     '/images/home/cat-eyeglasses.png';
 
-                  const variantText = [item.selectedColor, item.selectedSize]
-                    .filter(Boolean)
-                    .join(' | ');
+                  const config = item.configuration || {};
+                  const pType = item.productType || config.productType || 'eyeglasses';
+                  const unitPrice = item.unitPrice || item.product?.price || 0;
+                  const itemTotal = unitPrice * (item.quantity || 1);
 
                   return (
                     <div
-                      key={item.product?.id || idx}
-                      className="flex items-center justify-between gap-3 pb-3 border-b border-slate-100 last:border-b-0 last:pb-0"
+                      key={item.configurationHash || item.product?.id || idx}
+                      className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100 last:border-b-0 last:pb-0"
                     >
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-14 h-12 bg-[#F5F6F7] rounded-xl p-1.5 flex items-center justify-center shrink-0">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="w-14 h-14 bg-[#F5F6F7] rounded-xl p-1.5 flex items-center justify-center shrink-0 border border-slate-100">
                           <img
                             src={itemImage}
                             alt={item.product?.name || 'Eyewear item'}
@@ -577,18 +569,41 @@ export const Checkout = () => {
                         </div>
                         <div className="min-w-0">
                           <h4 className="text-xs sm:text-sm font-bold text-[#14232E] truncate">
-                            {item.product?.name}
+                            {item.product?.name || item.name}
                           </h4>
-                          {variantText && (
-                            <p className="text-[11px] text-slate-400 truncate mt-0.5">
-                              {variantText}
-                            </p>
+                          <div className="text-[11px] text-slate-500 mt-0.5">
+                            Color: <strong className="text-slate-700">{item.selectedColor || 'Standard'}</strong> × {item.quantity || 1}
+                          </div>
+
+                          {/* Optical Configuration Details */}
+                          {pType === 'eyeglasses' && config.lensSelection && (
+                            <div className="text-[10px] text-slate-500 mt-0.5">
+                              {config.lensSelection.lensType?.replace('-', ' ')}
+                              {config.lensSelection.lensName && ` · ${config.lensSelection.lensName}`}
+                            </div>
+                          )}
+                          {pType === 'contact-lens' && config.contactLens && (
+                            <div className="text-[10px] text-slate-500 mt-0.5">
+                              {config.contactLens.boxes || 1} Box{(config.contactLens.boxes || 1) > 1 ? 'es' : ''} ({config.contactLens.piecesPerBox || 6} Pcs/Box)
+                              {config.contactLens.od?.sph && ` · OD ${config.contactLens.od.sph}`}
+                            </div>
+                          )}
+                          {pType === 'sunglasses' && config.sunglass && (
+                            <div className="text-[10px] text-slate-500 mt-0.5">
+                              {config.sunglass.lensName || 'Sunglasses'}
+                              {config.sunglass.mode === 'power' && ' · Corrective Rx'}
+                            </div>
                           )}
                         </div>
                       </div>
 
-                      <div className="text-xs sm:text-sm font-extrabold text-[#14232E] tabular-nums shrink-0">
-                        ₹{(item.product?.price || 0).toLocaleString('en-IN')}
+                      <div className="text-xs sm:text-sm font-extrabold text-[#14232E] tabular-nums shrink-0 text-right">
+                        <div>₹{itemTotal.toLocaleString('en-IN')}</div>
+                        {item.quantity > 1 && (
+                          <div className="text-[10px] font-normal text-slate-400">
+                            ₹{unitPrice.toLocaleString('en-IN')} each
+                          </div>
+                        )}
                       </div>
                     </div>
                   );

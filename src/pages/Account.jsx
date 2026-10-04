@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   User as UserIcon,
   Package,
   Heart,
-  MapPin,
   Settings,
   LogOut,
   Edit2,
@@ -18,25 +17,19 @@ import {
   Headphones,
   ChevronRight,
   ArrowRight,
-  Plus,
-  Trash2,
   CheckCircle2,
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
-import { Modal } from '../components/common/Modal';
 
 export const Account = () => {
   const {
     user,
     orders,
     logout,
-    updateProfile,
-    addAddress,
-    deleteAddress,
-    setDefaultAddress
+    updateProfile
   } = useAuth();
 
   const { wishlist, toggleWishlist, isInWishlist } = useWishlist();
@@ -57,16 +50,6 @@ export const Account = () => {
   const [editPhone, setEditPhone] = useState(user?.phone || '');
   const [editEmail, setEditEmail] = useState(user?.email || '');
   const [profileSaved, setProfileSaved] = useState(false);
-
-  // Add Address Modal state
-  const [isAddAddressOpen, setIsAddAddressOpen] = useState(false);
-  const [newFullName, setNewFullName] = useState('');
-  const [newPhone, setNewPhone] = useState('');
-  const [newStreet, setNewStreet] = useState('');
-  const [newLocality, setNewLocality] = useState('');
-  const [newCity, setNewCity] = useState('');
-  const [newState, setNewState] = useState('');
-  const [newPincode, setNewPincode] = useState('');
   const [expandedOrderId, setExpandedOrderId] = useState(null);
 
   const setTab = (tab) => {
@@ -82,28 +65,6 @@ export const Account = () => {
     setIsEditingProfile(false);
     setProfileSaved(true);
     setTimeout(() => setProfileSaved(false), 3000);
-  };
-
-  const handleAddNewAddress = (e) => {
-    e.preventDefault();
-    addAddress({
-      fullName: newFullName,
-      phone: newPhone,
-      street: newStreet,
-      locality: newLocality,
-      city: newCity,
-      state: newState,
-      pincode: newPincode,
-      isDefault: false
-    });
-    setIsAddAddressOpen(false);
-    setNewFullName('');
-    setNewPhone('');
-    setNewStreet('');
-    setNewLocality('');
-    setNewCity('');
-    setNewState('');
-    setNewPincode('');
   };
 
   const handleLogout = () => {
@@ -236,7 +197,7 @@ export const Account = () => {
             My Account
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 mt-1.5 font-normal">
-            Manage your profile, orders, addresses and more.
+            Manage your profile, orders, and more.
           </p>
         </div>
 
@@ -278,7 +239,6 @@ export const Account = () => {
                 { id: 'profile', label: 'Profile Information', icon: <UserIcon size={17} /> },
                 { id: 'orders', label: 'My Orders', icon: <Package size={17} /> },
                 { id: 'wishlist', label: 'Wishlist', icon: <Heart size={17} />, badge: 2 },
-                { id: 'addresses', label: 'Addresses', icon: <MapPin size={17} /> },
                 { id: 'settings', label: 'Account Settings', icon: <Settings size={17} /> }
               ].map((item) => {
                 const isActive = activeTab === item.id;
@@ -952,53 +912,6 @@ export const Account = () => {
               </div>
             )}
 
-            {/* TAB: ADDRESSES */}
-            {activeTab === 'addresses' && (
-              <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-2xs space-y-6">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                  <div>
-                    <h2 className="text-lg font-bold text-[#14232E]">
-                      Saved Addresses
-                    </h2>
-                    <p className="text-xs text-slate-500">
-                      Manage delivery destinations for express shipping
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIsAddAddressOpen(true)}
-                    className="flex items-center gap-1.5 px-4 py-2 bg-[#E4232C] hover:bg-[#C81921] text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-xs"
-                  >
-                    <Plus size={14} />
-                    <span>Add New Address</span>
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {user.addresses?.map((addr) => (
-                    <div
-                      key={addr.id}
-                      className="border border-slate-200 rounded-xl p-4 space-y-2 relative bg-white"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-[#14232E] text-xs sm:text-sm">
-                          {addr.fullName}
-                        </span>
-                        {addr.isDefault && (
-                          <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded">
-                            Default
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs text-slate-500 leading-relaxed">
-                        {addr.street}, {addr.locality}, {addr.city}, {addr.state} - {addr.pincode}
-                      </p>
-                      <p className="text-xs text-slate-400">Phone: {addr.phone}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
 
             {/* TAB: ACCOUNT SETTINGS */}
             {activeTab === 'settings' && (
@@ -1037,94 +950,6 @@ export const Account = () => {
         </div>
       </div>
 
-      {/* Add Address Modal */}
-      <Modal
-        isOpen={isAddAddressOpen}
-        onClose={() => setIsAddAddressOpen(false)}
-        title="Add Delivery Address"
-      >
-        <form onSubmit={handleAddNewAddress} className="space-y-4 text-xs">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">Full Name</label>
-              <input
-                type="text"
-                required
-                value={newFullName}
-                onChange={(e) => setNewFullName(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">Phone</label>
-              <input
-                type="text"
-                required
-                value={newPhone}
-                onChange={(e) => setNewPhone(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1">House / Flat / Street</label>
-            <input
-              type="text"
-              required
-              value={newStreet}
-              onChange={(e) => setNewStreet(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
-            />
-          </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">City</label>
-              <input
-                type="text"
-                required
-                value={newCity}
-                onChange={(e) => setNewCity(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">State</label>
-              <input
-                type="text"
-                required
-                value={newState}
-                onChange={(e) => setNewState(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
-              />
-            </div>
-            <div>
-              <label className="block font-semibold text-slate-700 mb-1">Pincode</label>
-              <input
-                type="text"
-                required
-                value={newPincode}
-                onChange={(e) => setNewPincode(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-200 rounded-lg text-xs"
-              />
-            </div>
-          </div>
-          <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              onClick={() => setIsAddAddressOpen(false)}
-              className="px-4 py-2 border border-slate-200 rounded-lg text-xs text-slate-600 hover:bg-slate-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              className="px-5 py-2 bg-[#E4232C] hover:bg-[#C81921] text-white rounded-lg text-xs font-bold"
-            >
-              Save Address
-            </button>
-          </div>
-        </form>
-      </Modal>
     </div>
   );
 };

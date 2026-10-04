@@ -1,6 +1,15 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { PRODUCTS } from '../data/products';
 const AuthContext = createContext(undefined);
+const SAMPLE_SHIPPING_ADDRESS = {
+  fullName: 'Saiteja',
+  phone: '+91 98765 43210',
+  street: 'H.No 12-5-67, Collectorate Road',
+  locality: 'Mankammathota',
+  city: 'Karimnagar',
+  state: 'Telangana',
+  pincode: '505001'
+};
 const INITIAL_USER = {
   id: 'usr-tlh-101',
   name: 'Saiteja',
@@ -8,27 +17,7 @@ const INITIAL_USER = {
   phone: '+91 98765 43210',
   joinedDate: 'May 2025',
   avatar: '/images/home/promo-sunglasses-man.png',
-  addresses: [{
-    id: 'addr-01',
-    fullName: 'Saiteja',
-    phone: '+91 98765 43210',
-    street: 'H.No 12-5-67, Collectorate Road',
-    locality: 'Mankammathota',
-    city: 'Karimnagar',
-    state: 'Telangana',
-    pincode: '505001',
-    isDefault: true
-  }, {
-    id: 'addr-02',
-    fullName: 'Saiteja (Office)',
-    phone: '+91 98765 43210',
-    street: 'Plot 45, Tech Zone',
-    locality: 'Hitech City',
-    city: 'Hyderabad',
-    state: 'Telangana',
-    pincode: '500081',
-    isDefault: false
-  }]
+  addresses: []
 };
 const INITIAL_ORDERS = [{
   id: '#LH10256',
@@ -46,7 +35,7 @@ const INITIAL_ORDERS = [{
   total: 2999,
   status: 'Delivered',
   paymentMethod: 'UPI / QR',
-  shippingAddress: INITIAL_USER.addresses[0],
+  shippingAddress: SAMPLE_SHIPPING_ADDRESS,
   estimatedDelivery: '16 Jun 2025',
   trackingNumber: 'LH-EXP-89021'
 }, {
@@ -65,7 +54,7 @@ const INITIAL_ORDERS = [{
   total: 4499,
   status: 'Delivered',
   paymentMethod: 'Credit / Debit Card',
-  shippingAddress: INITIAL_USER.addresses[0],
+  shippingAddress: SAMPLE_SHIPPING_ADDRESS,
   estimatedDelivery: '09 Jun 2025',
   trackingNumber: 'LH-EXP-77612'
 }, {
@@ -84,7 +73,7 @@ const INITIAL_ORDERS = [{
   total: 2598,
   status: 'Processing',
   paymentMethod: 'UPI / QR',
-  shippingAddress: INITIAL_USER.addresses[0],
+  shippingAddress: SAMPLE_SHIPPING_ADDRESS,
   estimatedDelivery: '02 Jun 2025',
   trackingNumber: 'LH-EXP-65410'
 }, {
@@ -103,7 +92,7 @@ const INITIAL_ORDERS = [{
   total: 3799,
   status: 'Shipped',
   paymentMethod: 'UPI / QR',
-  shippingAddress: INITIAL_USER.addresses[0],
+  shippingAddress: SAMPLE_SHIPPING_ADDRESS,
   estimatedDelivery: '25 May 2025',
   trackingNumber: 'LH-EXP-54329'
 }, {
@@ -122,7 +111,7 @@ const INITIAL_ORDERS = [{
   total: 4199,
   status: 'Delivered',
   paymentMethod: 'Cash on Delivery',
-  shippingAddress: INITIAL_USER.addresses[0],
+  shippingAddress: SAMPLE_SHIPPING_ADDRESS,
   estimatedDelivery: '14 May 2025',
   trackingNumber: 'LH-EXP-43218'
 }];
@@ -188,7 +177,7 @@ export const AuthProvider = ({
       email: email,
       phone: user?.phone || '+91 98000 00000',
       joinedDate: 'Joined March 2026',
-      addresses: user?.addresses || INITIAL_USER.addresses
+      addresses: []
     };
     setUser(loggedInUser);
     return {
@@ -316,26 +305,74 @@ export const AuthProvider = ({
       };
     });
   };
-  const placeOrder = orderData => {
+  const placeOrder = (orderData) => {
+    const orderNum = 'LH-2026-' + Math.floor(1000 + Math.random() * 9000);
+    const nowIso = new Date().toISOString();
+
+    // Build prescription snapshot if any eyeglasses item has prescription
+    const firstEyeglassRx = orderData.items?.find((i) => i.configuration?.prescription?.od?.sph)?.configuration?.prescription;
+
     const newOrder = {
-      id: 'TLH-2026-' + Math.floor(1000 + Math.random() * 9000),
+      id: orderNum,
+      orderNumber: orderNum,
       date: new Date().toLocaleDateString('en-GB', {
         day: '2-digit',
         month: 'short',
         year: 'numeric'
       }),
+      orderDate: nowIso,
+      customer: {
+        id: user?.id || 'cust-guest',
+        name: user?.name || orderData.shippingAddress?.fullName || 'Guest Customer',
+        email: user?.email || 'customer@thelenshut.com',
+        phone: user?.phone || orderData.shippingAddress?.phone || '+91 98765 00000'
+      },
+      itemCountText: `${orderData.items?.length || 1} item${orderData.items?.length > 1 ? 's' : ''}`,
       items: orderData.items,
       subtotal: orderData.subtotal,
       discount: orderData.discount,
+      discountAmount: orderData.discount || 0,
       shipping: orderData.shipping,
+      shippingFee: orderData.shipping || 0,
       total: orderData.total,
+      totalAmount: orderData.total,
       status: 'Placed',
-      paymentMethod: orderData.paymentMethod,
-      shippingAddress: orderData.shippingAddress,
+      orderStatus: 'Processing',
+      paymentMethod: orderData.paymentMethod || 'UPI',
+      paymentStatus: 'Paid',
+      shippingAddress: orderData.shippingAddress || SAMPLE_SHIPPING_ADDRESS,
       estimatedDelivery: 'Within 3–5 Business Days',
-      trackingNumber: 'TLH-EXP-' + Math.floor(100000 + Math.random() * 900000)
+      trackingNumber: 'LH-EXP-' + Math.floor(100000 + Math.random() * 900000),
+      prescription: firstEyeglassRx ? {
+        hasPrescription: true,
+        rightEye: {
+          sph: firstEyeglassRx.od?.sph || '0.00',
+          cyl: firstEyeglassRx.od?.cyl || '0.00',
+          axis: firstEyeglassRx.od?.axis || '-'
+        },
+        leftEye: {
+          sph: firstEyeglassRx.os?.sph || '0.00',
+          cyl: firstEyeglassRx.os?.cyl || '0.00',
+          axis: firstEyeglassRx.os?.axis || '-'
+        },
+        pd: firstEyeglassRx.pd ? `${firstEyeglassRx.pd} mm` : '63 mm',
+        lensPackage: orderData.items?.find((i) => i.configuration?.lensSelection?.lensName)?.configuration?.lensSelection?.lensName || 'Optical Lab Custom Lens'
+      } : {
+        hasPrescription: false
+      }
     };
-    setOrders(prev => [newOrder, ...prev]);
+
+    setOrders((prev) => [newOrder, ...prev]);
+
+    // Sync to admin thelenshut_orders in localStorage
+    try {
+      const existing = localStorage.getItem('thelenshut_orders');
+      const parsed = existing ? JSON.parse(existing) : [];
+      localStorage.setItem('thelenshut_orders', JSON.stringify([newOrder, ...parsed]));
+    } catch {
+      // ignore
+    }
+
     return newOrder;
   };
   return <AuthContext.Provider value={{
