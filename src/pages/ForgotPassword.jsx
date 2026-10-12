@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, ArrowRight, ArrowLeft, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
+
 export const ForgotPassword = () => {
   const {
     forgotPassword
   } = useAuth();
+  const { toast } = useNotification();
   const [email, setEmail] = useState('');
   const [statusMessage, setStatusMessage] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -15,6 +18,7 @@ export const ForgotPassword = () => {
     const res = await forgotPassword(email);
     setLoading(false);
     setStatusMessage(res.message);
+    toast.success('Password recovery link dispatched');
   };
   return <div className="min-h-[70vh] flex items-center justify-center py-12 px-4 sm:px-6 bg-[#FFFFFF]">
       <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-8 sm:p-10 shadow-lg space-y-6">

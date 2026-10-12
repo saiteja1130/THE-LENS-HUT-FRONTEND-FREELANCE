@@ -40,10 +40,21 @@ export const VariantSelector = ({
                   : 'border-slate-200 bg-white hover:border-slate-300'
               } ${isOutOfStock ? 'opacity-40 cursor-not-allowed' : ''}`}
             >
-              <span
-                className="w-3.5 h-3.5 rounded-full border border-slate-300 shadow-2xs shrink-0"
-                style={{ backgroundColor: v.colorCode || '#14232E' }}
-              />
+              {v.image ? (
+                <img
+                  src={v.image}
+                  alt={v.colorName}
+                  className="w-5 h-4 object-contain rounded bg-slate-50 border border-slate-200 shrink-0"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <span
+                  className="w-3.5 h-3.5 rounded-full border border-slate-300 shadow-2xs shrink-0"
+                  style={{ backgroundColor: v.colorCode || '#14232E' }}
+                />
+              )}
               <span className="text-[#14232E]">{v.colorName}</span>
               {v.price && v.compareAtPrice && v.price < v.compareAtPrice && (
                 <span className="text-[10px] font-bold text-[#E4232C]">

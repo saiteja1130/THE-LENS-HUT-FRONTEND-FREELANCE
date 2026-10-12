@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import {
   Heart,
@@ -11,7 +11,7 @@ import {
   Check,
   Ruler
 } from 'lucide-react';
-import { PRODUCTS } from '../data/products';
+import { productApi } from '../services/productApi';
 import { normalizeProduct } from '../services/opticalEngine/productNormalizer';
 import { ProductConfigurationEngine } from '../components/product/ProductConfigurationEngine';
 import { ProductCard } from '../components/common/ProductCard';
@@ -22,18 +22,43 @@ export const ProductDetail = () => {
   const { productSlug } = useParams();
   const [searchParams] = useSearchParams();
   const editItemId = searchParams.get('editItem');
+  const [fetchedProduct, setFetchedProduct] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [relatedProducts, setRelatedProducts] = useState([]);
 
   const { cart } = useCart();
   const { isInWishlist, toggleWishlist } = useWishlist();
 
-  // Find and normalize the product
-  const rawProduct = useMemo(() => {
-    return PRODUCTS.find((p) => p.slug === productSlug) || PRODUCTS[0];
+  useEffect(() => {
+    let isMounted = true;
+    const loadProduct = async () => {
+      setIsLoading(true);
+      const res = await productApi.getProductBySlug(productSlug);
+      if (isMounted) {
+        if (res.success && res.data) {
+          setFetchedProduct(res.data);
+          const cat = res.data.category || 'eyeglasses';
+          const relRes = await productApi.getProducts({ category: cat });
+          if (isMounted && relRes.success && Array.isArray(relRes.data)) {
+            setRelatedProducts(relRes.data.filter((p) => p.id !== res.data.id).slice(0, 5));
+          }
+        } else {
+          setFetchedProduct(null);
+        }
+        setIsLoading(false);
+      }
+    };
+    if (productSlug) {
+      loadProduct();
+    }
+    return () => {
+      isMounted = false;
+    };
   }, [productSlug]);
 
   const product = useMemo(() => {
-    return normalizeProduct(rawProduct);
-  }, [rawProduct]);
+    return fetchedProduct ? normalizeProduct(fetchedProduct) : null;
+  }, [fetchedProduct]);
 
   // Check if returning from cart in edit mode
   const editCartItem = useMemo(() => {
@@ -45,30 +70,40 @@ export const ProductDetail = () => {
   const [activeTab, setActiveTab] = useState('description');
   const [activeVariantImages, setActiveVariantImages] = useState(null);
 
-  // Gallery calculation
-  const gallery = useMemo(() => {
+  // Perspective images calculation
+  const perspectiveImages = useMemo(() => {
     if (activeVariantImages && activeVariantImages.length > 0) {
       return activeVariantImages;
     }
     const imgs = [];
-    if (product.primaryImage) imgs.push(product.primaryImage);
-    if (product.secondaryImage) imgs.push(product.secondaryImage);
-    if (product.galleryImages?.length) imgs.push(...product.galleryImages);
-    if (product.images?.front) imgs.push(product.images.front);
-    if (imgs.length === 0) imgs.push('/images/home/cat-eyeglasses.png');
-    return [...new Set(imgs)];
+    if (product?.images?.front) imgs.push(product.images.front);
+    if (product?.images?.side) imgs.push(product.images.side);
+    if (product?.images?.angle) imgs.push(product.images.angle);
+    if (imgs.length === 0 && product?.primaryImage) imgs.push(product.primaryImage);
+    return [...new Set(imgs.filter(Boolean))];
   }, [product, activeVariantImages]);
 
-  const isWish = isInWishlist(product.id);
+  const isWish = product ? isInWishlist(product.id) : false;
 
-  const relatedProducts = useMemo(() => {
-    const others = PRODUCTS.filter((p) => p.id !== product?.id);
-    const sameCategory = others.filter((p) => p.category === product?.category);
-    if (sameCategory.length >= 5) {
-      return sameCategory.slice(0, 5);
-    }
-    return [...sameCategory, ...others.filter((p) => p.category !== product?.category)].slice(0, 5);
-  }, [product]);
+  if (isLoading) {
+    return (
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-[#E4232C] border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-[50vh] flex flex-col items-center justify-center py-16 px-4 text-center">
+        <h2 className="text-xl font-bold text-slate-800 mb-2">Product Not Found</h2>
+        <p className="text-slate-500 text-sm mb-6">The requested optical product is currently unavailable.</p>
+        <Link to="/shop" className="px-6 py-2.5 bg-[#E4232C] text-white font-bold text-sm rounded-lg hover:bg-[#c91821] transition-colors">
+          Browse Catalog
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white min-h-screen py-5 sm:py-7">
@@ -102,7 +137,7 @@ export const ProductDetail = () => {
         {/* Main Product Layout: 2 Columns */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
-          {/* ================= LEFT COLUMN: GALLERY & TABS ================= */}
+          {/* ================= LEFT COLUMN: PRODUCT SHOWCASE & TABS ================= */}
           <div className="lg:col-span-7 space-y-8">
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-start">
               
@@ -129,10 +164,10 @@ export const ProductDetail = () => {
                 </button>
 
                 {/* Left Arrow */}
-                {gallery.length > 1 && (
+                {perspectiveImages.length > 1 && (
                   <button
                     type="button"
-                    onClick={() => setActiveThumb((prev) => (prev === 0 ? gallery.length - 1 : prev - 1))}
+                    onClick={() => setActiveThumb((prev) => (prev === 0 ? perspectiveImages.length - 1 : prev - 1))}
                     className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-slate-700 flex items-center justify-center shadow-xs transition-colors cursor-pointer z-10"
                     aria-label="Previous image"
                   >
@@ -141,10 +176,10 @@ export const ProductDetail = () => {
                 )}
 
                 {/* Right Arrow */}
-                {gallery.length > 1 && (
+                {perspectiveImages.length > 1 && (
                   <button
                     type="button"
-                    onClick={() => setActiveThumb((prev) => (prev === gallery.length - 1 ? 0 : prev + 1))}
+                    onClick={() => setActiveThumb((prev) => (prev === perspectiveImages.length - 1 ? 0 : prev + 1))}
                     className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-slate-700 flex items-center justify-center shadow-xs transition-colors cursor-pointer z-10"
                     aria-label="Next image"
                   >
@@ -154,16 +189,16 @@ export const ProductDetail = () => {
 
                 {/* Main Product Image */}
                 <img
-                  src={gallery[activeThumb] || gallery[0]}
+                  src={perspectiveImages[activeThumb] || perspectiveImages[0]}
                   alt={product.name}
                   className="w-full h-full object-contain mix-blend-multiply transition-all duration-300"
                 />
               </div>
 
               {/* Thumbnails */}
-              {gallery.length > 1 && (
+              {perspectiveImages.length > 1 && (
                 <div className="order-2 sm:order-1 flex flex-row sm:flex-col gap-2.5 sm:gap-3 shrink-0 justify-center sm:justify-start">
-                  {gallery.slice(0, 5).map((img, idx) => (
+                  {perspectiveImages.slice(0, 5).map((img, idx) => (
                     <button
                       key={idx}
                       onClick={() => setActiveThumb(idx)}
@@ -333,9 +368,19 @@ export const ProductDetail = () => {
               initialConfiguration={editCartItem?.configuration}
               initialQuantity={editCartItem?.quantity || 1}
               onVariantChange={(variant) => {
-                if (variant.images && variant.images.length > 0) {
-                  setActiveVariantImages(variant.images);
-                  setActiveThumb(0);
+                if (variant) {
+                  const imgs = [];
+                  if (variant.images && typeof variant.images === 'object' && !Array.isArray(variant.images)) {
+                    if (variant.images.front) imgs.push(variant.images.front);
+                    if (variant.images.side) imgs.push(variant.images.side);
+                    if (variant.images.angle) imgs.push(variant.images.angle);
+                  } else if (variant.image) {
+                    imgs.push(variant.image);
+                  }
+                  if (imgs.length > 0) {
+                    setActiveVariantImages([...new Set(imgs)]);
+                    setActiveThumb(0);
+                  }
                 }
               }}
             />

@@ -1,29 +1,16 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import { generateConfigurationHash } from '../services/opticalEngine/hasher';
 import { calculateItemPrice } from '../services/opticalEngine/pricing';
+import { useNotification } from './NotificationContext';
 
 const CartContext = createContext(undefined);
 
 export const CartProvider = ({ children }) => {
-  const [cart, setCart] = useState(() => {
-    try {
-      const saved = localStorage.getItem('tlh_cart');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const { toast } = useNotification();
+  const [cart, setCart] = useState([]);
 
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem('tlh_cart', JSON.stringify(cart));
-    } catch {
-      // ignore
-    }
-  }, [cart]);
 
   /**
    * Unified Add to Cart
@@ -87,6 +74,7 @@ export const CartProvider = ({ children }) => {
       return [newItem, ...prev];
     });
 
+    toast.success(`Added ${product.name} to your shopping bag`);
     setIsCartDrawerOpen(true);
   };
 
@@ -95,6 +83,7 @@ export const CartProvider = ({ children }) => {
    */
   const removeFromCart = (identifier) => {
     setCart((prev) => prev.filter((item) => item.configurationHash !== identifier && item.id !== identifier && item.product.id !== identifier));
+    toast.info('Item removed from shopping bag');
   };
 
   /**
@@ -210,6 +199,7 @@ export const CartProvider = ({ children }) => {
 
   const removeCoupon = () => {
     setAppliedCoupon(null);
+    toast.info('Coupon code removed');
   };
 
   const clearCart = () => {

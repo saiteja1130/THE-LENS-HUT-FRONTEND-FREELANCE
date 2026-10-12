@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
 import { WishlistProvider } from './context/WishlistContext';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 import { Header } from './components/layout/Header';
 import { Footer } from './components/layout/Footer';
 import { CartDrawer } from './components/layout/CartDrawer';
@@ -23,6 +24,7 @@ import { Checkout } from './pages/Checkout';
 import { Account } from './pages/Account';
 import { Login } from './pages/Login';
 import { SignUp } from './pages/SignUp';
+import { VerifyEmail } from './pages/VerifyEmail';
 import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
 import { AboutUs } from './pages/AboutUs';
@@ -50,13 +52,14 @@ function ScrollToTop() {
 }
 export default function App() {
   return <BrowserRouter>
-      <AuthProvider>
-        <WishlistProvider>
-          <CartProvider>
-            <ScrollToTop />
-            <div className="flex flex-col min-h-screen bg-white text-[#2B2F33] selection:bg-[#E4232C]/10 selection:text-[#E4232C]">
-              {/* Global Navigation Header */}
-              <Header />
+      <NotificationProvider>
+        <AuthProvider>
+          <WishlistProvider>
+            <CartProvider>
+              <ScrollToTop />
+              <div className="flex flex-col min-h-screen bg-white text-[#2B2F33] selection:bg-[#E4232C]/10 selection:text-[#E4232C]">
+                {/* Global Navigation Header */}
+                <Header />
 
               {/* Page Route Router */}
               <main className="flex-1">
@@ -81,6 +84,7 @@ export default function App() {
                   <Route path="/signup" element={<SignUp />} />
                   <Route path="/create-account" element={<SignUp />} />
                   <Route path="/register" element={<SignUp />} />
+                  <Route path="/verify-email" element={<VerifyEmail />} />
                   <Route path="/about" element={<AboutUs />} />
                   <Route path="/contact" element={<ContactUs />} />
                   <Route path="/forgot-password" element={<ForgotPassword />} />
@@ -114,5 +118,6 @@ export default function App() {
           </CartProvider>
         </WishlistProvider>
       </AuthProvider>
-    </BrowserRouter>;
+    </NotificationProvider>
+  </BrowserRouter>;
 }

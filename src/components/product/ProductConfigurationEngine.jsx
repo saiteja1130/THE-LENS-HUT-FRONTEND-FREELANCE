@@ -69,7 +69,7 @@ export const ProductConfigurationEngine = ({
   const [validationErrors, setValidationErrors] = useState([]);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
-  // Sync variant changes to parent for image gallery
+  // Sync variant changes to parent for perspective images
   useEffect(() => {
     if (configuration.variantId && onVariantChange) {
       const activeVariant = product.variants?.find((v) => v.id === configuration.variantId);

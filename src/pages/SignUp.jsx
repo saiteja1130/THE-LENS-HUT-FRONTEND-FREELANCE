@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Lock, Mail, User, Phone, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 import { BrandLogo } from '../components/common/BrandLogo';
 
 export const SignUp = () => {
   const { signup, login } = useAuth();
+  const { toast } = useNotification();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
@@ -15,19 +17,25 @@ export const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [agreeTerms, setAgreeTerms] = useState(false);
   const [error, setError] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
 
     if (!agreeTerms) {
-      setError('Please accept the Terms & Conditions and Privacy Policy to continue.');
+      const err = 'Please accept the Terms & Conditions and Privacy Policy to continue.';
+      setError(err);
+      toast.warning(err);
       return;
     }
 
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+      const err = 'Password must be at least 6 characters long.';
+      setFieldErrors({ password: err });
+      toast.warning(err);
       return;
     }
 
@@ -41,9 +49,15 @@ export const SignUp = () => {
     setLoading(false);
 
     if (res.success) {
-      navigate('/account');
+      toast.success('Account created! Please enter the 6-digit verification code sent to your email.');
+      navigate(`/verify-email?email=${encodeURIComponent(email.trim())}`);
     } else {
-      setError(res.error || 'Failed to create account.');
+      const err = res.error || 'Failed to create account.';
+      setError(err);
+      if (res.errors) {
+        setFieldErrors(res.errors);
+      }
+      toast.error(err);
     }
   };
 
@@ -134,9 +148,16 @@ export const SignUp = () => {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="Enter your full name"
-                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-[#14232E] placeholder:text-slate-400 focus:outline-none focus:border-[#14232E] transition-colors"
+                      className={`w-full pl-10 pr-4 py-2.5 bg-white border ${
+                        fieldErrors.fullName ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
+                      } rounded-xl text-xs sm:text-sm text-[#14232E] placeholder:text-slate-400 focus:outline-none focus:border-[#14232E] transition-colors`}
                     />
                   </div>
+                  {fieldErrors.fullName && (
+                    <p className="text-rose-600 text-[11px] font-semibold mt-1">
+                      {fieldErrors.fullName}
+                    </p>
+                  )}
                 </div>
 
                 {/* Email Address */}
@@ -152,27 +173,40 @@ export const SignUp = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="Enter your email address"
-                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-[#14232E] placeholder:text-slate-400 focus:outline-none focus:border-[#14232E] transition-colors"
+                      className={`w-full pl-10 pr-4 py-2.5 bg-white border ${
+                        fieldErrors.email ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
+                      } rounded-xl text-xs sm:text-sm text-[#14232E] placeholder:text-slate-400 focus:outline-none focus:border-[#14232E] transition-colors`}
                     />
                   </div>
+                  {fieldErrors.email && (
+                    <p className="text-rose-600 text-[11px] font-semibold mt-1">
+                      {fieldErrors.email}
+                    </p>
+                  )}
                 </div>
 
                 {/* Phone Number */}
                 <div>
                   <label className="text-xs font-bold text-[#14232E] block mb-1">
-                    Phone Number *
+                    Phone Number
                   </label>
                   <div className="relative">
                     <Phone size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
                     <input
                       type="tel"
-                      required
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="Enter your phone number"
-                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-[#14232E] placeholder:text-slate-400 focus:outline-none focus:border-[#14232E] transition-colors"
+                      placeholder="Enter your phone number (optional)"
+                      className={`w-full pl-10 pr-4 py-2.5 bg-white border ${
+                        fieldErrors.phone ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
+                      } rounded-xl text-xs sm:text-sm text-[#14232E] placeholder:text-slate-400 focus:outline-none focus:border-[#14232E] transition-colors`}
                     />
                   </div>
+                  {fieldErrors.phone && (
+                    <p className="text-rose-600 text-[11px] font-semibold mt-1">
+                      {fieldErrors.phone}
+                    </p>
+                  )}
                 </div>
 
                 {/* Password */}
@@ -187,8 +221,10 @@ export const SignUp = () => {
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Create a password"
-                      className="w-full pl-10 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm text-[#14232E] placeholder:text-slate-400 focus:outline-none focus:border-[#14232E] transition-colors"
+                      placeholder="Create a password (min 6 characters)"
+                      className={`w-full pl-10 pr-10 py-2.5 bg-white border ${
+                        fieldErrors.password ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200'
+                      } rounded-xl text-xs sm:text-sm text-[#14232E] placeholder:text-slate-400 focus:outline-none focus:border-[#14232E] transition-colors`}
                     />
                     <button
                       type="button"
@@ -199,6 +235,11 @@ export const SignUp = () => {
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
+                  {fieldErrors.password && (
+                    <p className="text-rose-600 text-[11px] font-semibold mt-1">
+                      {fieldErrors.password}
+                    </p>
+                  )}
                 </div>
 
                 {/* Terms Agreement Checkbox */}

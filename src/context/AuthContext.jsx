@@ -1,120 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { PRODUCTS } from '../data/products';
+import { authApi } from '../services/authApi';
 const AuthContext = createContext(undefined);
-const SAMPLE_SHIPPING_ADDRESS = {
-  fullName: 'Saiteja',
-  phone: '+91 98765 43210',
-  street: 'H.No 12-5-67, Collectorate Road',
-  locality: 'Mankammathota',
-  city: 'Karimnagar',
-  state: 'Telangana',
-  pincode: '505001'
-};
-const INITIAL_USER = {
-  id: 'usr-tlh-101',
-  name: 'Saiteja',
-  email: 'saiteja@gmail.com',
-  phone: '+91 98765 43210',
-  joinedDate: 'May 2025',
-  avatar: '/images/home/promo-sunglasses-man.png',
-  addresses: []
-};
-const INITIAL_ORDERS = [{
-  id: '#LH10256',
-  date: '12 Jun 2025',
-  itemCountText: '1 item',
-  items: [{
-    product: PRODUCTS[0],
-    quantity: 1,
-    selectedColor: 'Blue',
-    selectedSize: 'Medium'
-  }],
-  subtotal: 2999,
-  discount: 0,
-  shipping: 0,
-  total: 2999,
-  status: 'Delivered',
-  paymentMethod: 'UPI / QR',
-  shippingAddress: SAMPLE_SHIPPING_ADDRESS,
-  estimatedDelivery: '16 Jun 2025',
-  trackingNumber: 'LH-EXP-89021'
-}, {
-  id: '#LH10248',
-  date: '05 Jun 2025',
-  itemCountText: '1 item',
-  items: [{
-    product: PRODUCTS[4] || PRODUCTS[1],
-    quantity: 1,
-    selectedColor: 'Gold',
-    selectedSize: 'Medium'
-  }],
-  subtotal: 4499,
-  discount: 0,
-  shipping: 0,
-  total: 4499,
-  status: 'Delivered',
-  paymentMethod: 'Credit / Debit Card',
-  shippingAddress: SAMPLE_SHIPPING_ADDRESS,
-  estimatedDelivery: '09 Jun 2025',
-  trackingNumber: 'LH-EXP-77612'
-}, {
-  id: '#LH10232',
-  date: '28 May 2025',
-  itemCountText: '2 items',
-  items: [{
-    product: PRODUCTS[2] || PRODUCTS[0],
-    quantity: 2,
-    selectedColor: 'Clear',
-    selectedSize: 'Standard'
-  }],
-  subtotal: 2598,
-  discount: 0,
-  shipping: 0,
-  total: 2598,
-  status: 'Processing',
-  paymentMethod: 'UPI / QR',
-  shippingAddress: SAMPLE_SHIPPING_ADDRESS,
-  estimatedDelivery: '02 Jun 2025',
-  trackingNumber: 'LH-EXP-65410'
-}, {
-  id: '#LH10221',
-  date: '20 May 2025',
-  itemCountText: '1 item',
-  items: [{
-    product: PRODUCTS[1] || PRODUCTS[0],
-    quantity: 1,
-    selectedColor: 'Tortoise',
-    selectedSize: 'Medium'
-  }],
-  subtotal: 3799,
-  discount: 0,
-  shipping: 0,
-  total: 3799,
-  status: 'Shipped',
-  paymentMethod: 'UPI / QR',
-  shippingAddress: SAMPLE_SHIPPING_ADDRESS,
-  estimatedDelivery: '25 May 2025',
-  trackingNumber: 'LH-EXP-54329'
-}, {
-  id: '#LH10205',
-  date: '10 May 2025',
-  itemCountText: '1 item',
-  items: [{
-    product: PRODUCTS[3] || PRODUCTS[0],
-    quantity: 1,
-    selectedColor: 'Matte Black',
-    selectedSize: 'Wide'
-  }],
-  subtotal: 4199,
-  discount: 0,
-  shipping: 0,
-  total: 4199,
-  status: 'Delivered',
-  paymentMethod: 'Cash on Delivery',
-  shippingAddress: SAMPLE_SHIPPING_ADDRESS,
-  estimatedDelivery: '14 May 2025',
-  trackingNumber: 'LH-EXP-43218'
-}];
 export const AuthProvider = ({
   children
 }) => {
@@ -143,6 +29,7 @@ export const AuthProvider = ({
     }
   });
   const [isLoading, setIsLoading] = useState(false);
+
   useEffect(() => {
     try {
       if (user) {
@@ -154,6 +41,7 @@ export const AuthProvider = ({
       // ignore
     }
   }, [user]);
+
   useEffect(() => {
     try {
       localStorage.setItem('tlh_orders', JSON.stringify(orders));
@@ -161,59 +49,153 @@ export const AuthProvider = ({
       // ignore
     }
   }, [orders]);
-  const login = async (email, _password, _rememberMe = true) => {
+
+  // Login with Email & Password
+  const login = async (email, password, rememberMe = true) => {
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 600));
+    const res = await authApi.loginWithPassword({ email, password });
     setIsLoading(false);
-    if (!email || !email.includes('@')) {
-      return {
-        success: false,
-        error: 'Please enter a valid email address.'
+
+    if (res.success && res.data) {
+      const { token, user: apiUser } = res.data;
+      const normalizedUser = {
+        id: apiUser.id,
+        name: apiUser.fullName,
+        email: apiUser.email,
+        phone: apiUser.phone || '',
+        role: apiUser.role,
+        isEmailVerified: apiUser.isEmailVerified,
+        joinedDate: apiUser.createdAt ? new Date(apiUser.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Recently',
+        avatar: apiUser.avatar || '',
+        addresses: apiUser.addresses || [],
       };
+      const storage = rememberMe ? localStorage : sessionStorage;
+      storage.setItem('thelenshut_auth_token', token);
+      setUser(normalizedUser);
+      return { success: true, user: normalizedUser };
     }
-    const loggedInUser = {
-      id: user?.id || 'usr-' + Date.now(),
-      name: user?.email === email ? user.name : email.split('@')[0],
-      email: email,
-      phone: user?.phone || '+91 98000 00000',
-      joinedDate: 'Joined March 2026',
-      addresses: []
-    };
-    setUser(loggedInUser);
+
     return {
-      success: true
+      success: false,
+      error: res.message || 'Failed to sign in. Please check your credentials.',
+      errorCode: res.errorCode,
+      errors: res.errors || {},
+      data: res.data,
     };
   };
-  const signup = async data => {
+
+  // Request Login OTP
+  const requestLoginOTP = async (email) => {
     setIsLoading(true);
-    await new Promise(r => setTimeout(r, 700));
+    const res = await authApi.requestLoginOTP({ email });
     setIsLoading(false);
-    if (!data.name || !data.email || !data.password) {
-      return {
-        success: false,
-        error: 'All mandatory fields are required.'
+    return res;
+  };
+
+  // Verify Login OTP
+  const verifyLoginOTP = async (email, otp) => {
+    setIsLoading(true);
+    const res = await authApi.verifyLoginOTP({ email, otp });
+    setIsLoading(false);
+
+    if (res.success && res.data) {
+      const { token, user: apiUser } = res.data;
+      const normalizedUser = {
+        id: apiUser.id,
+        name: apiUser.fullName,
+        email: apiUser.email,
+        phone: apiUser.phone || '',
+        role: apiUser.role,
+        isEmailVerified: apiUser.isEmailVerified,
+        joinedDate: 'Recently',
+        avatar: apiUser.avatar || '',
+        addresses: apiUser.addresses || [],
       };
+      localStorage.setItem('thelenshut_auth_token', token);
+      setUser(normalizedUser);
+      return { success: true, user: normalizedUser };
     }
-    if (data.password.length < 6) {
-      return {
-        success: false,
-        error: 'Password must be at least 6 characters long.'
-      };
-    }
-    const newUser = {
-      id: 'usr-' + Date.now(),
-      name: data.name,
+
+    return {
+      success: false,
+      error: res.message || 'Invalid login code.',
+      errorCode: res.errorCode,
+      errors: res.errors || {},
+    };
+  };
+
+  // User Signup
+  const signup = async (data) => {
+    setIsLoading(true);
+    const res = await authApi.signup({
+      fullName: data.name,
       email: data.email,
       phone: data.phone || '',
-      joinedDate: 'Joined Today',
-      addresses: []
-    };
-    setUser(newUser);
+      password: data.password,
+      confirmPassword: data.confirmPassword || data.password,
+    });
+    setIsLoading(false);
+
+    if (res.success) {
+      return {
+        success: true,
+        message: res.message,
+        requiresVerification: true,
+        email: data.email,
+      };
+    }
+
     return {
-      success: true
+      success: false,
+      error: res.message || 'Failed to register account.',
+      errorCode: res.errorCode,
+      errors: res.errors || {},
     };
   };
+
+  // Verify Email with 6-digit OTP
+  const verifyEmail = async (email, otp) => {
+    setIsLoading(true);
+    const res = await authApi.verifyEmail({ email, otp });
+    setIsLoading(false);
+
+    if (res.success && res.data) {
+      const { token, user: apiUser } = res.data;
+      const normalizedUser = {
+        id: apiUser.id,
+        name: apiUser.fullName,
+        email: apiUser.email,
+        phone: apiUser.phone || '',
+        role: apiUser.role,
+        isEmailVerified: true,
+        joinedDate: 'Recently',
+        avatar: apiUser.avatar || '',
+        addresses: apiUser.addresses || [],
+      };
+      localStorage.setItem('thelenshut_auth_token', token);
+      setUser(normalizedUser);
+      return { success: true, user: normalizedUser };
+    }
+
+    return {
+      success: false,
+      error: res.message || 'Failed to verify email.',
+      errorCode: res.errorCode,
+      errors: res.errors || {},
+    };
+  };
+
+  // Resend Email Verification OTP
+  const resendVerificationOTP = async (email) => {
+    setIsLoading(true);
+    const res = await authApi.resendVerificationOTP({ email });
+    setIsLoading(false);
+    return res;
+  };
+
   const logout = () => {
+    localStorage.removeItem('thelenshut_auth_token');
+    sessionStorage.removeItem('thelenshut_auth_token');
     setUser(null);
   };
   const forgotPassword = async email => {
@@ -381,7 +363,11 @@ export const AuthProvider = ({
     isLoading,
     orders,
     login,
+    requestLoginOTP,
+    verifyLoginOTP,
     signup,
+    verifyEmail,
+    resendVerificationOTP,
     logout,
     forgotPassword,
     resetPassword,

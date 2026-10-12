@@ -3,8 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle2, Lock, ShieldCheck, ArrowRight, Check, Tag, Gift, Sparkles } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
 
 export const Checkout = () => {
+  const { toast } = useNotification();
   const {
     cart,
     subtotal: cartSubtotal,
@@ -43,51 +45,9 @@ export const Checkout = () => {
   const [confirmedOrder, setConfirmedOrder] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Items to display: use actual cart if not empty, otherwise display mock catalog items matching the screenshot
+  // Items to display: active cart items
   const hasCartItems = cart.length > 0;
-  const displayItems = hasCartItems
-    ? cart
-    : [
-      {
-        product: {
-          id: 'mock-01',
-          name: 'Classic Square Frame',
-          slug: 'classic-square-black',
-          category: 'Eyeglasses',
-          price: 2999,
-          image: '/images/home/cat-eyeglasses.png'
-        },
-        selectedColor: 'Black',
-        selectedSize: 'Medium',
-        quantity: 1
-      },
-      {
-        product: {
-          id: 'mock-02',
-          name: 'Aviator Metal Frame',
-          slug: 'urban-classic-sunglasses',
-          category: 'Sunglasses',
-          price: 4499,
-          image: '/images/home/cat-sunglasses.png'
-        },
-        selectedColor: 'Gold',
-        selectedSize: 'Medium',
-        quantity: 1
-      },
-      {
-        product: {
-          id: 'mock-03',
-          name: 'Contact Lens (Monthly)',
-          slug: 'daily-contact-lenses',
-          category: 'Contact Lenses',
-          price: 1299,
-          image: '/images/home/cat-sunglasses.png'
-        },
-        selectedColor: '',
-        selectedSize: '6 Lenses',
-        quantity: 1
-      }
-    ];
+  const displayItems = cart;
 
   const [couponInput, setCouponInput] = useState('');
   const [couponStatus, setCouponStatus] = useState(null);
@@ -101,8 +61,10 @@ export const Checkout = () => {
     if (res.success) {
       setCouponStatus({ type: 'success', message: res.message });
       setCouponInput('');
+      toast.success(res.message);
     } else {
       setCouponStatus({ type: 'error', message: res.message });
+      toast.error(res.message);
     }
   };
 
@@ -126,11 +88,10 @@ export const Checkout = () => {
     activeDiscount = rawSubtotal >= 3000 ? Math.round(rawSubtotal * 0.2) : 0;
   } else if (appliedCoupon === 'FIRSTHUT') {
     activeDiscount = Math.min(rawSubtotal, 300);
-  } else if (!appliedCoupon && !hasCartItems) {
-    // Default catalog promotional discount
-    activeDiscount = 1449;
   } else if (hasCartItems) {
     activeDiscount = cartDiscount;
+  } else {
+    activeDiscount = 0;
   }
 
   const subtotal = rawSubtotal;
@@ -140,6 +101,12 @@ export const Checkout = () => {
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
+
+    if (!fullName.trim() || !contactPhone.trim() || !street.trim() || !pincode.trim()) {
+      toast.warning('Please complete all required shipping address fields');
+      return;
+    }
+
     setIsProcessing(true);
 
     const shippingAddress = {
@@ -193,6 +160,7 @@ export const Checkout = () => {
     }
     setIsProcessing(false);
     setConfirmedOrder(newOrder);
+    toast.success('Your order has been placed successfully!');
   };
 
   // Order Confirmed State
@@ -543,11 +511,12 @@ export const Checkout = () => {
               <div className="space-y-4">
                 {displayItems.map((item, idx) => {
                   const itemImage =
-                    item.product?.colors?.[0]?.image ||
+                    item.product?.images?.front ||
+                    item.product?.colors?.[0]?.images?.front ||
                     item.product?.primaryImage ||
                     item.product?.image ||
                     item.productSnapshot?.image ||
-                    '/images/home/cat-eyeglasses.png';
+                    '';
 
                   const config = item.configuration || {};
                   const pType = item.productType || config.productType || 'eyeglasses';

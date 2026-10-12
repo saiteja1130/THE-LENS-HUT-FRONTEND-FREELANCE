@@ -1,68 +1,44 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Star, Heart } from 'lucide-react';
 import { useWishlist } from '../../context/WishlistContext';
+import { productApi } from '../../services/productApi';
 
 export const FeaturedProducts = () => {
   const { isInWishlist, toggleWishlist } = useWishlist();
+  const [products, setProducts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const products = [
-    {
-      id: 'feat-01',
-      name: 'Classic Clear Frame',
-      category: 'Eyeglasses',
-      slug: 'classic-clear-frame',
-      price: 2999,
-      mrp: 3749,
-      discountPercent: 20,
-      rating: 5,
-      image: '/images/home/cat-eyeglasses.png'
-    },
-    {
-      id: 'feat-02',
-      name: 'Urban Classic Sunglasses',
-      category: 'Sunglasses',
-      slug: 'urban-classic-sunglasses',
-      price: 3399,
-      mrp: 3999,
-      discountPercent: 15,
-      rating: 5,
-      image: '/images/home/cat-sunglasses.png'
-    },
-    {
-      id: 'feat-03',
-      name: 'Blue Light Blocking Frame',
-      category: 'Eyeglasses',
-      slug: 'blue-light-blocking-frame',
-      price: 4499,
-      mrp: 4999,
-      discountPercent: 10,
-      rating: 5,
-      image: '/images/home/cat-sunglasses.png'
-    },
-    {
-      id: 'feat-04',
-      name: 'Daily Contact Lenses',
-      category: 'Contact Lenses',
-      slug: 'daily-contact-lenses',
-      price: 1299,
-      mrp: 1599,
-      discountPercent: 0,
-      rating: 5,
-      image: '/images/home/cat-sunglasses.png'
-    },
-    {
-      id: 'feat-05',
-      name: 'Premium Cleaning Kit',
-      category: 'Accessories',
-      slug: 'premium-cleaning-kit',
-      price: 799,
-      mrp: 999,
-      discountPercent: 0,
-      rating: 5,
-      image: '/images/home/cat-sunglasses.png'
-    }
-  ];
+  useEffect(() => {
+    let isMounted = true;
+    const fetchFeatured = async () => {
+      try {
+        const res = await productApi.getFeaturedProducts(5);
+        if (isMounted && res.success && Array.isArray(res.data) && res.data.length > 0) {
+          const mapped = res.data.map((p) => ({
+            id: p.id,
+            name: p.name,
+            category: p.category,
+            slug: p.slug,
+            price: p.price,
+            mrp: p.mrp,
+            discountPercent: p.discountPercent,
+            rating: p.rating || 5,
+            image: p.images?.front || p.primaryImage || p.image || '',
+          }));
+          setProducts(mapped);
+        }
+      } catch (err) {
+        console.error('Error fetching featured products:', err);
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    };
+    fetchFeatured();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <section className="py-12 bg-white">

@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { Mail, Phone, MapPin, MessageSquare, Clock, CheckCircle2, Send } from 'lucide-react';
+import { useNotification } from '../context/NotificationContext';
+
 export const ContactUs = () => {
+  const { toast } = useNotification();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -11,6 +14,7 @@ export const ContactUs = () => {
   const handleSubmit = e => {
     e.preventDefault();
     setSubmitted(true);
+    toast.success('Your message has been sent to our optical specialists!');
     setName('');
     setEmail('');
     setPhone('');

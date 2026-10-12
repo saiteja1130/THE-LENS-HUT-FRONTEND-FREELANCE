@@ -1,18 +1,22 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
-import { PRODUCTS } from '../data/products';
+import { productApi } from '../services/productApi';
+import { categoryApi } from '../services/categoryApi';
 import { FilterSidebar } from '../components/shop/FilterSidebar';
 import { ShopToolbar } from '../components/shop/ShopToolbar';
 import { ProductGrid } from '../components/common/ProductGrid';
 import { Modal } from '../components/common/Modal';
 import { Newsletter } from '../components/home/Newsletter';
-import { ArrowRight, ChevronRight } from 'lucide-react';
+import { ArrowRight, ChevronRight, Loader2 } from 'lucide-react';
 
 export const Shop = ({
   initialCategory,
   pageTitle = 'Our Collection',
   pageDescription = 'Discover the perfect eyewear for your style, comfort and vision.'
 }) => {
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const searchFilter = searchParams.get('search') || '';
   const urlCategory = searchParams.get('category') || initialCategory || 'all';
@@ -35,6 +39,29 @@ export const Shop = ({
   const [isMobileFilterOpen, setIsMobileFilterOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 9;
+
+  useEffect(() => {
+    let isMounted = true;
+    const fetchCatalog = async () => {
+      setLoading(true);
+      const res = await productApi.getProducts();
+      if (isMounted && res.success && Array.isArray(res.data)) {
+        setProducts(res.data);
+      }
+      if (isMounted) setLoading(false);
+    };
+    fetchCatalog();
+
+    categoryApi.getActiveCategories().then((res) => {
+      if (isMounted && res.success && Array.isArray(res.data)) {
+        setCategories(res.data);
+      }
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     setFilters((prev) => ({
@@ -66,7 +93,7 @@ export const Shop = ({
   };
 
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter((p) => {
+    return products.filter((p) => {
       // Search
       if (searchFilter) {
         const q = searchFilter.toLowerCase();
@@ -122,32 +149,6 @@ export const Shop = ({
     return filteredProducts.slice(start, start + itemsPerPage);
   }, [filteredProducts, currentPage, itemsPerPage]);
 
-  const categoryCards = [
-    {
-      label: 'Eyeglasses',
-      category: 'eyeglasses',
-      countText: 'View 120+ Products',
-      image: '/images/home/cat-eyeglasses.png'
-    },
-    {
-      label: 'Sunglasses',
-      category: 'sunglasses',
-      countText: 'View 85+ Products',
-      image: '/images/home/cat-sunglasses.png'
-    },
-    {
-      label: 'Contact Lenses',
-      category: 'contact-lenses',
-      countText: 'View 60+ Products',
-      image: '/images/home/cat-sunglasses.png'
-    },
-    {
-      label: 'Accessories',
-      category: 'accessories',
-      countText: 'View 40+ Products',
-      image: '/images/home/cat-sunglasses.png'
-    }
-  ];
 
   return (
     <div className="bg-[#FFFFFF] min-h-screen">
@@ -195,40 +196,48 @@ export const Shop = ({
 
       {/* 2. Main Content Container */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-        {/* Category Strip under Hero Banner (4 Cards using existing images) */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-10">
-          {categoryCards.map((card) => {
-            const isActive = filters.category === card.category;
-            return (
-              <div
-                key={card.category}
-                onClick={() => handleCategoryShortcut(card.category)}
-                className={`group bg-[#F8F9FA] hover:bg-slate-50 rounded-2xl p-4 sm:p-5 flex flex-col justify-between border transition-all cursor-pointer shadow-2xs hover:shadow-xs ${isActive ? 'border-[#E4232C] ring-1 ring-[#E4232C]' : 'border-slate-100 hover:border-slate-200'
+        {/* Dynamic Category Strip under Hero Banner */}
+        {categories.length > 0 && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 mb-10">
+            {categories.map((cat) => {
+              const catSlug = cat.slug || cat.name?.toLowerCase().replace(/\s+/g, '-');
+              const isActive = filters.category === catSlug;
+              return (
+                <div
+                  key={catSlug}
+                  onClick={() => handleCategoryShortcut(catSlug)}
+                  className={`group bg-[#F8F9FA] hover:bg-slate-50 rounded-2xl p-4 sm:p-5 flex flex-col justify-between border transition-all cursor-pointer shadow-2xs hover:shadow-xs ${
+                    isActive ? 'border-[#E4232C] ring-1 ring-[#E4232C]' : 'border-slate-100 hover:border-slate-200'
                   }`}
-              >
-                {/* Image */}
-                <div className="w-full h-24 sm:h-28 flex items-center justify-center p-2">
-                  <img
-                    src={card.image}
-                    alt={card.label}
-                    className="max-h-full max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300"
-                  />
-                </div>
+                >
+                  {/* Image */}
+                  <div className="w-full h-24 sm:h-28 flex items-center justify-center p-2">
+                    {cat.imageUrl ? (
+                      <img
+                        src={cat.imageUrl}
+                        alt={cat.name}
+                        className="max-h-full max-w-full object-contain mix-blend-multiply group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="text-xs text-slate-400 font-medium">{cat.name}</div>
+                    )}
+                  </div>
 
-                {/* Details */}
-                <div className="pt-2">
-                  <h3 className="text-sm sm:text-base font-bold text-[#14232E] group-hover:text-[#E4232C] transition-colors">
-                    {card.label}
-                  </h3>
-                  <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1">
-                    <span>{card.countText}</span>
-                    <ArrowRight size={13} className="text-slate-400 group-hover:text-[#E4232C] group-hover:translate-x-1 transition-all" />
+                  {/* Details */}
+                  <div className="pt-2">
+                    <h3 className="text-sm sm:text-base font-bold text-[#14232E] group-hover:text-[#E4232C] transition-colors">
+                      {cat.name}
+                    </h3>
+                    <div className="flex items-center justify-between text-[11px] text-slate-400 mt-1">
+                      <span>{cat.subtitle || 'Browse Collection'}</span>
+                      <ArrowRight size={13} className="text-slate-400 group-hover:text-[#E4232C] group-hover:translate-x-1 transition-all" />
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
 
         {/* 3. Shop Toolbar & Main 2-Column Area */}
         <div className="flex gap-8 items-start mb-16">

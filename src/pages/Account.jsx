@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useWishlist } from '../context/WishlistContext';
+import { useNotification } from '../context/NotificationContext';
 
 export const Account = () => {
   const {
@@ -33,6 +34,7 @@ export const Account = () => {
   } = useAuth();
 
   const { wishlist, toggleWishlist, isInWishlist } = useWishlist();
+  const { toast, showConfirm } = useNotification();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'dashboard';
@@ -64,96 +66,40 @@ export const Account = () => {
     });
     setIsEditingProfile(false);
     setProfileSaved(true);
+    toast.success('Profile details updated successfully');
     setTimeout(() => setProfileSaved(false), 3000);
   };
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
+    showConfirm({
+      title: 'Sign Out of Account',
+      message: 'Are you sure you want to end your current session? You can sign back in anytime.',
+      confirmText: 'Sign Out',
+      cancelText: 'Stay Signed In',
+      destructive: true,
+      onConfirm: () => {
+        logout();
+        toast.info('Signed out successfully');
+        navigate('/');
+      }
+    });
   };
 
-  // Mock sample recent orders for display matching screenshot
-  const displayOrders = orders && orders.length > 0
-    ? orders
-    : [
-      {
-        id: '#LH10256',
-        date: '12 Jun 2025',
-        itemCountText: '1 item',
-        image: '/images/home/cat-eyeglasses.png',
-        total: 2999,
-        status: 'Delivered'
-      },
-      {
-        id: '#LH10248',
-        date: '05 Jun 2025',
-        itemCountText: '1 item',
-        image: '/images/home/cat-sunglasses.png',
-        total: 4499,
-        status: 'Delivered'
-      },
-      {
-        id: '#LH10232',
-        date: '28 May 2025',
-        itemCountText: '2 items',
-        image: '/images/home/cat-sunglasses.png',
-        total: 2598,
-        status: 'Processing'
-      },
-      {
-        id: '#LH10221',
-        date: '20 May 2025',
-        itemCountText: '1 item',
-        image: '/images/home/promo-eyeglasses.png',
-        total: 3799,
-        status: 'Shipped'
-      },
-      {
-        id: '#LH10205',
-        date: '10 May 2025',
-        itemCountText: '1 item',
-        image: '/images/home/cat-eyeglasses.png',
-        total: 4199,
-        status: 'Delivered'
-      }
-    ];
+  // Real user orders
+  const displayOrders = orders && orders.length > 0 ? orders : [];
 
-  // 3 Wishlist preview cards matching the screenshot
-  const wishlistPreviewItems = [
-    {
-      id: 'wl-01',
-      name: 'Classic Square Frame',
-      category: 'Eyeglasses',
-      slug: 'classic-square-black',
-      price: 2999,
-      mrp: 3749,
-      discountPercent: 20,
-      image: '/images/home/cat-eyeglasses.png',
-      isFav: true
-    },
-    {
-      id: 'wl-02',
-      name: 'Aviator Metal Frame',
-      category: 'Sunglasses',
-      slug: 'urban-classic-sunglasses',
-      price: 4499,
-      mrp: 5999,
-      discountPercent: 15,
-      image: '/images/home/cat-sunglasses.png',
-      isFav: false
-    },
-    {
-      id: 'wl-03',
-      name: 'Blue Light Blocking Frame',
-      category: 'Eyeglasses',
-      slug: 'blue-light-blocking-frame',
-      price: 4499,
-      mrp: 5999,
-      discountPercent: 25,
-      image: '/images/home/promo-eyeglasses.png',
-      isFav: false
-    }
-  ];
+  // Actual wishlist preview items from user wishlist
+  const wishlistPreviewItems = (wishlist || []).slice(0, 3).map((item) => ({
+    id: item.id,
+    name: item.name,
+    category: item.category,
+    slug: item.slug,
+    price: item.price,
+    mrp: item.mrp,
+    discountPercent: item.discountPercent,
+    image: item.images?.front || item.primaryImage || item.image || '',
+    isFav: true,
+  }));
 
   if (!user) {
     return (
@@ -451,9 +397,10 @@ export const Account = () => {
                     {displayOrders.slice(0, 5).map((order) => {
                       const orderImage =
                         order.image ||
-                        order.items?.[0]?.product?.colors?.[0]?.image ||
+                        order.items?.[0]?.product?.images?.front ||
+                        order.items?.[0]?.product?.colors?.[0]?.images?.front ||
                         order.items?.[0]?.product?.primaryImage ||
-                        '/images/home/cat-eyeglasses.png';
+                        '';
 
                       const itemCount = order.itemCountText || `${order.items?.length || 1} item`;
 
@@ -530,9 +477,10 @@ export const Account = () => {
                         {displayOrders.slice(0, 5).map((order) => {
                           const orderImage =
                             order.image ||
-                            order.items?.[0]?.product?.colors?.[0]?.image ||
+                            order.items?.[0]?.product?.images?.front ||
+                            order.items?.[0]?.product?.colors?.[0]?.images?.front ||
                             order.items?.[0]?.product?.primaryImage ||
-                            '/images/home/cat-eyeglasses.png';
+                            '';
 
                           const itemCount = order.itemCountText || `${order.items?.length || 1} item`;
 

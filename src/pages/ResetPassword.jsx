@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Lock, Eye, EyeOff, CheckCircle2, ArrowRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useNotification } from '../context/NotificationContext';
+
 export const ResetPassword = () => {
   const {
     resetPassword
   } = useAuth();
+  const { toast } = useNotification();
   const navigate = useNavigate();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -17,17 +20,22 @@ export const ResetPassword = () => {
     e.preventDefault();
     setError(null);
     if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+      const err = 'Password must be at least 6 characters long.';
+      setError(err);
+      toast.warning(err);
       return;
     }
     if (password !== confirmPassword) {
-      setError('Passwords do not match.');
+      const err = 'Passwords do not match.';
+      setError(err);
+      toast.warning(err);
       return;
     }
     setLoading(true);
     const res = await resetPassword(password);
     setLoading(false);
     setStatusMessage(res.message);
+    toast.success('Your password has been updated!');
   };
   return <div className="min-h-[70vh] flex items-center justify-center py-12 px-4 sm:px-6 bg-[#FFFFFF]">
       <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200 p-8 sm:p-10 shadow-lg space-y-6">

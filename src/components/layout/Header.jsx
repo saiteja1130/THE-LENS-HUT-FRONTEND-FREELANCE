@@ -4,7 +4,7 @@ import { Search, Heart, ShoppingBag, User as UserIcon, Menu, X, ChevronDown, Log
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
 import { useWishlist } from '../../context/WishlistContext';
-import { PRODUCTS } from '../../data/products';
+import { productApi } from '../../services/productApi';
 import { AnnouncementBar } from './AnnouncementBar';
 import { MobileMenu } from './MobileMenu';
 import { BrandLogo } from '../common/BrandLogo';
@@ -54,13 +54,20 @@ export const Header = () => {
 
   // Search logic
   useEffect(() => {
+    let isMounted = true;
     if (searchQuery.trim().length > 1) {
       const q = searchQuery.toLowerCase();
-      const hits = PRODUCTS.filter(p => p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q) || p.frameShape?.toLowerCase().includes(q)).slice(0, 5);
-      setSearchResults(hits);
+      productApi.getProducts({ search: q }).then((res) => {
+        if (isMounted && res.success && Array.isArray(res.data)) {
+          setSearchResults(res.data.slice(0, 5));
+        }
+      });
     } else {
       setSearchResults([]);
     }
+    return () => {
+      isMounted = false;
+    };
   }, [searchQuery]);
   const handleSearchSubmit = e => {
     e.preventDefault();
