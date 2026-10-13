@@ -72,7 +72,7 @@ export const TrackOrder = () => {
       setErrorMsg('');
 
       try {
-        const res = await orderApi.getOrderById(queryId);
+        const res = await orderApi.getOrderById(queryId, { mode: 'track' });
         if (res && res.success && res.data) {
           setOrder(res.data);
           setIsLoading(false);

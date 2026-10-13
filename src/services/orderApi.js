@@ -36,10 +36,27 @@ export const orderApi = {
 
   /**
    * Fetch order details by ID or Order Number
+   * @param {string} idOrOrderNumber
+   * @param {Object|string} options Verification options (email, phone) or tracking mode
    */
-  getOrderById: async (idOrOrderNumber) => {
+  getOrderById: async (idOrOrderNumber, options = {}) => {
     try {
-      const res = await api.get(`/orders/${encodeURIComponent(idOrOrderNumber)}`);
+      const params = new URLSearchParams();
+      if (typeof options === 'string') {
+        if (options.includes('@')) {
+          params.append('email', options);
+        } else {
+          params.append('phone', options);
+        }
+      } else if (options && typeof options === 'object') {
+        if (options.email) params.append('email', options.email);
+        if (options.phone) params.append('phone', options.phone);
+        if (options.mode) params.append('mode', options.mode);
+        if (options.trackingOnly) params.append('trackingOnly', 'true');
+      }
+
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const res = await api.get(`/orders/${encodeURIComponent(idOrOrderNumber)}${queryString}`);
       return res;
     } catch (error) {
       console.warn('[orderApi Axios] Fetch order by id failed:', error.message);
