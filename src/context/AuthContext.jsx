@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authApi } from '../services/authApi';
+import { orderApi } from '../services/orderApi';
 const AuthContext = createContext(undefined);
 export const AuthProvider = ({
   children
@@ -29,6 +30,23 @@ export const AuthProvider = ({
     }
   });
   const [isLoading, setIsLoading] = useState(false);
+
+  // Sync user orders from backend whenever user is authenticated
+  useEffect(() => {
+    const fetchUserOrders = async () => {
+      if (user) {
+        try {
+          const res = await orderApi.getMyOrders();
+          if (res.success && Array.isArray(res.data)) {
+            setOrders(res.data);
+          }
+        } catch (err) {
+          console.warn('[AuthContext] Failed to sync orders from backend:', err);
+        }
+      }
+    };
+    fetchUserOrders();
+  }, [user]);
 
   useEffect(() => {
     try {
@@ -226,11 +244,43 @@ export const AuthProvider = ({
       ...data
     } : null);
   };
-  const placeOrder = (orderData) => {
-    const orderNum = 'LH-2026-' + Math.floor(1000 + Math.random() * 9000);
+  const placeOrder = async (orderData) => {
+    // 1. Try placing order with backend API
+    try {
+      const apiResponse = await orderApi.createOrder(orderData);
+      if (apiResponse.success && apiResponse.data) {
+        const serverOrder = apiResponse.data;
+        const normalizedOrder = {
+          ...serverOrder,
+          id: serverOrder._id || serverOrder.id || serverOrder.orderNumber,
+          date: new Date(serverOrder.createdAt || serverOrder.orderDate || Date.now()).toLocaleDateString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric'
+          }),
+        };
+
+        setOrders((prev) => [normalizedOrder, ...prev]);
+
+        // Sync to admin thelenshut_orders in localStorage for local fallback preview
+        try {
+          const existing = localStorage.getItem('thelenshut_orders');
+          const parsed = existing ? JSON.parse(existing) : [];
+          localStorage.setItem('thelenshut_orders', JSON.stringify([normalizedOrder, ...parsed]));
+        } catch {
+          // ignore
+        }
+
+        return normalizedOrder;
+      }
+    } catch (apiErr) {
+      console.warn('[AuthContext] Backend order creation failed, falling back to local order:', apiErr);
+    }
+
+    // 2. Resilient local fallback if backend is unreachable
+    const orderNum = 'LH-' + Math.floor(100000 + Math.random() * 900000);
     const nowIso = new Date().toISOString();
 
-    // Build prescription snapshot if any eyeglasses item has prescription
     const firstEyeglassRx = orderData.items?.find((i) => i.configuration?.prescription?.od?.sph)?.configuration?.prescription;
 
     const newOrder = {
@@ -261,7 +311,7 @@ export const AuthProvider = ({
       orderStatus: 'Processing',
       paymentMethod: orderData.paymentMethod || 'UPI',
       paymentStatus: 'Paid',
-      shippingAddress: orderData.shippingAddress || SAMPLE_SHIPPING_ADDRESS,
+      shippingAddress: orderData.shippingAddress,
       estimatedDelivery: 'Within 3–5 Business Days',
       trackingNumber: 'LH-EXP-' + Math.floor(100000 + Math.random() * 900000),
       prescription: firstEyeglassRx ? {
@@ -285,7 +335,6 @@ export const AuthProvider = ({
 
     setOrders((prev) => [newOrder, ...prev]);
 
-    // Sync to admin thelenshut_orders in localStorage
     try {
       const existing = localStorage.getItem('thelenshut_orders');
       const parsed = existing ? JSON.parse(existing) : [];
@@ -296,6 +345,7 @@ export const AuthProvider = ({
 
     return newOrder;
   };
+
   return <AuthContext.Provider value={{
     user,
     isAuthenticated: !!user,

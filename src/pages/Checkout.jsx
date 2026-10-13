@@ -145,22 +145,35 @@ export const Checkout = () => {
       totalPrice: (item.unitPrice || item.product?.price || 0) * (item.quantity || 1)
     }));
 
-    const newOrder = placeOrder({
-      items: orderItemsSnapshot,
-      shippingAddress,
-      paymentMethod: paymentLabel,
-      subtotal,
-      discount,
-      shipping,
-      total
-    });
+    try {
+      const newOrder = await placeOrder({
+        items: orderItemsSnapshot,
+        shippingAddress,
+        paymentMethod: paymentLabel,
+        subtotal,
+        discount,
+        discountAmount: discount,
+        couponCode: appliedCoupon || '',
+        shipping: shippingMethod === 'express' ? 149 : shipping,
+        shippingFee: shippingMethod === 'express' ? 149 : shipping,
+        total,
+        totalAmount: total,
+        customerEmail: contactEmail,
+        customerPhone: contactPhone,
+        customerName: fullName,
+      });
 
-    if (hasCartItems) {
-      clearCart();
+      if (hasCartItems) {
+        clearCart();
+      }
+      setIsProcessing(false);
+      setConfirmedOrder(newOrder);
+      toast.success('Your order has been placed successfully!');
+    } catch (orderErr) {
+      console.error('[Checkout] Error placing order:', orderErr);
+      setIsProcessing(false);
+      toast.error('An error occurred while creating your order. Please try again.');
     }
-    setIsProcessing(false);
-    setConfirmedOrder(newOrder);
-    toast.success('Your order has been placed successfully!');
   };
 
   // Order Confirmed State

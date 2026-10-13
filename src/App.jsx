@@ -94,6 +94,8 @@ export default function App() {
                   <Route path="/about-us" element={<AboutUs />} />
                   <Route path="/contact-us" element={<ContactUs />} />
                   <Route path="/track-order" element={<TrackOrder />} />
+                  <Route path="/order/:orderId" element={<TrackOrder />} />
+                  <Route path="/orders/:orderId" element={<TrackOrder />} />
                   <Route path="/faqs" element={<FAQs />} />
 
                   {/* Legal & Policies */}

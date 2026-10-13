@@ -392,151 +392,179 @@ export const Account = () => {
                     </button>
                   </div>
 
-                  {/* Mobile Order Cards (block md:hidden) */}
-                  <div className="block md:hidden space-y-3">
-                    {displayOrders.slice(0, 5).map((order) => {
-                      const orderImage =
-                        order.image ||
-                        order.items?.[0]?.product?.images?.front ||
-                        order.items?.[0]?.product?.colors?.[0]?.images?.front ||
-                        order.items?.[0]?.product?.primaryImage ||
-                        '';
-
-                      const itemCount = order.itemCountText || `${order.items?.length || 1} item`;
-
-                      const statusStyles = {
-                        Delivered: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
-                        Processing: 'bg-blue-50 text-blue-700 border border-blue-100',
-                        Shipped: 'bg-amber-50 text-amber-700 border border-amber-100'
-                      };
-
-                      return (
-                        <div
-                          key={order.id}
-                          className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-xl space-y-2.5"
-                        >
-                          <div className="flex items-center justify-between">
-                            <span className="font-bold text-xs text-[#14232E]">
-                              {order.id}
-                            </span>
-                            <span
-                              className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${statusStyles[order.status] || 'bg-slate-100 text-slate-600'
-                                }`}
-                            >
-                              {order.status}
-                            </span>
-                          </div>
-
-                          <div className="flex items-center justify-between text-xs pt-1">
-                            <div className="flex items-center gap-2.5">
-                              <div className="w-9 h-8 bg-white rounded p-1 border border-slate-200 shrink-0 flex items-center justify-center">
-                                <img
-                                  src={orderImage}
-                                  alt="Product"
-                                  className="w-full h-full object-contain mix-blend-multiply"
-                                />
-                              </div>
-                              <div>
-                                <span className="text-[11px] text-slate-400 block">{order.date}</span>
-                                <span className="text-xs font-semibold text-slate-700">{itemCount}</span>
-                              </div>
-                            </div>
-
-                            <div className="text-right">
-                              <span className="font-extrabold text-xs sm:text-sm text-[#14232E] block tabular-nums">
-                                ₹{order.total.toLocaleString('en-IN')}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => setTab('orders')}
-                                className="text-[11px] font-bold text-[#E4232C] hover:underline cursor-pointer"
-                              >
-                                View Details →
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Desktop Orders Table (hidden md:block) */}
-                  <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-left text-xs min-w-[550px]">
-                      <thead>
-                        <tr className="text-[11px] font-semibold text-slate-400 border-b border-slate-100">
-                          <th className="pb-3 font-semibold">Order ID</th>
-                          <th className="pb-3 font-semibold">Date</th>
-                          <th className="pb-3 font-semibold">Items</th>
-                          <th className="pb-3 font-semibold">Total</th>
-                          <th className="pb-3 font-semibold">Status</th>
-                          <th className="pb-3 font-semibold text-right">Action</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
+                  {displayOrders.length === 0 ? (
+                    <div className="py-8 text-center text-slate-500 space-y-2">
+                      <Package className="w-10 h-10 text-slate-300 mx-auto" />
+                      <p className="text-xs font-semibold text-slate-700">No orders placed yet</p>
+                      <p className="text-[11px] text-slate-400">Your recent orders will appear here after checkout.</p>
+                      <Link
+                        to="/eyeglasses"
+                        className="inline-block mt-2 text-xs font-bold text-[#E4232C] hover:underline"
+                      >
+                        Explore Eyewear Catalog →
+                      </Link>
+                    </div>
+                  ) : (
+                    <>
+                      {/* Mobile Order Cards (block md:hidden) */}
+                      <div className="block md:hidden space-y-3">
                         {displayOrders.slice(0, 5).map((order) => {
+                          const orderId = order.orderNumber || order.id || order._id;
+                          const orderDate = order.date || (order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recently');
+                          const orderStatus = order.orderStatus || order.status || 'Processing';
+                          const orderTotal = Number(order.totalAmount !== undefined ? order.totalAmount : order.total) || 0;
                           const orderImage =
                             order.image ||
+                            order.items?.[0]?.image ||
                             order.items?.[0]?.product?.images?.front ||
                             order.items?.[0]?.product?.colors?.[0]?.images?.front ||
                             order.items?.[0]?.product?.primaryImage ||
                             '';
 
-                          const itemCount = order.itemCountText || `${order.items?.length || 1} item`;
+                          const itemCount = order.itemCountText || `${order.items?.length || 1} item${order.items?.length > 1 ? 's' : ''}`;
 
                           const statusStyles = {
-                            Delivered: 'bg-emerald-50 text-emerald-600',
-                            Processing: 'bg-blue-50 text-blue-600',
-                            Shipped: 'bg-amber-50 text-amber-600'
+                            Delivered: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+                            Processing: 'bg-blue-50 text-blue-700 border border-blue-100',
+                            Shipped: 'bg-amber-50 text-amber-700 border border-amber-100',
+                            Cancelled: 'bg-rose-50 text-rose-700 border border-rose-100',
                           };
 
                           return (
-                            <tr key={order.id} className="hover:bg-slate-50/50 transition-colors">
-                              <td className="py-3.5 font-bold text-[#14232E]">
-                                {order.id}
-                              </td>
-                              <td className="py-3.5 text-slate-500">
-                                {order.date}
-                              </td>
-                              <td className="py-3.5">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-8 h-7 bg-[#F5F6F7] rounded p-1 flex items-center justify-center shrink-0">
+                            <div
+                              key={orderId}
+                              className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-xl space-y-2.5"
+                            >
+                              <div className="flex items-center justify-between">
+                                <span className="font-bold text-xs text-[#14232E]">
+                                  {orderId}
+                                </span>
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                                    statusStyles[orderStatus] || 'bg-slate-100 text-slate-600'
+                                  }`}
+                                >
+                                  {orderStatus}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center justify-between text-xs pt-1">
+                                <div className="flex items-center gap-2.5">
+                                  <div className="w-9 h-8 bg-white rounded p-1 border border-slate-200 shrink-0 flex items-center justify-center">
                                     <img
                                       src={orderImage}
                                       alt="Product"
                                       className="w-full h-full object-contain mix-blend-multiply"
                                     />
                                   </div>
-                                  <span className="text-slate-600 font-medium">{itemCount}</span>
+                                  <div>
+                                    <span className="text-[11px] text-slate-400 block">{orderDate}</span>
+                                    <span className="text-xs font-semibold text-slate-700">{itemCount}</span>
+                                  </div>
                                 </div>
-                              </td>
-                              <td className="py-3.5 font-bold text-[#14232E] tabular-nums">
-                                ₹{order.total.toLocaleString('en-IN')}
-                              </td>
-                              <td className="py-3.5">
-                                <span
-                                  className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${statusStyles[order.status] || 'bg-slate-100 text-slate-600'
-                                    }`}
-                                >
-                                  {order.status}
-                                </span>
-                              </td>
-                              <td className="py-3.5 text-right">
-                                <button
-                                  type="button"
-                                  onClick={() => setTab('orders')}
-                                  className="text-slate-500 hover:text-[#E4232C] font-semibold flex items-center justify-end gap-1 ml-auto cursor-pointer"
-                                >
-                                  <span>View Details</span>
-                                  <ArrowRight size={12} className="text-[#E4232C]" />
-                                </button>
-                              </td>
-                            </tr>
+
+                                <div className="text-right">
+                                  <span className="font-extrabold text-xs sm:text-sm text-[#14232E] block tabular-nums">
+                                    ₹{orderTotal.toLocaleString('en-IN')}
+                                  </span>
+                                  <Link
+                                    to={`/order/${encodeURIComponent(orderId)}`}
+                                    className="text-[11px] font-bold text-[#E4232C] hover:underline cursor-pointer"
+                                  >
+                                    View Details →
+                                  </Link>
+                                </div>
+                              </div>
+                            </div>
                           );
                         })}
-                      </tbody>
-                    </table>
-                  </div>
+                      </div>
+
+                      {/* Desktop Orders Table (hidden md:block) */}
+                      <div className="hidden md:block overflow-x-auto">
+                        <table className="w-full text-left text-xs min-w-[550px]">
+                          <thead>
+                            <tr className="text-[11px] font-semibold text-slate-400 border-b border-slate-100">
+                              <th className="pb-3 font-semibold">Order ID</th>
+                              <th className="pb-3 font-semibold">Date</th>
+                              <th className="pb-3 font-semibold">Items</th>
+                              <th className="pb-3 font-semibold">Total</th>
+                              <th className="pb-3 font-semibold">Status</th>
+                              <th className="pb-3 font-semibold text-right">Action</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-slate-100">
+                            {displayOrders.slice(0, 5).map((order) => {
+                              const orderId = order.orderNumber || order.id || order._id;
+                              const orderDate = order.date || (order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recently');
+                              const orderStatus = order.orderStatus || order.status || 'Processing';
+                              const orderTotal = Number(order.totalAmount !== undefined ? order.totalAmount : order.total) || 0;
+                              const orderImage =
+                                order.image ||
+                                order.items?.[0]?.image ||
+                                order.items?.[0]?.product?.images?.front ||
+                                order.items?.[0]?.product?.colors?.[0]?.images?.front ||
+                                order.items?.[0]?.product?.primaryImage ||
+                                '';
+
+                              const itemCount = order.itemCountText || `${order.items?.length || 1} item${order.items?.length > 1 ? 's' : ''}`;
+
+                              const statusStyles = {
+                                Delivered: 'bg-emerald-50 text-emerald-600',
+                                Processing: 'bg-blue-50 text-blue-600',
+                                Shipped: 'bg-amber-50 text-amber-600',
+                                Cancelled: 'bg-rose-50 text-rose-600',
+                              };
+
+                              return (
+                                <tr key={orderId} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="py-3.5 font-bold text-[#14232E]">
+                                    {orderId}
+                                  </td>
+                                  <td className="py-3.5 text-slate-500">
+                                    {orderDate}
+                                  </td>
+                                  <td className="py-3.5">
+                                    <div className="flex items-center gap-2">
+                                      <div className="w-8 h-7 bg-[#F5F6F7] rounded p-1 flex items-center justify-center shrink-0">
+                                        <img
+                                          src={orderImage}
+                                          alt="Product"
+                                          className="w-full h-full object-contain mix-blend-multiply"
+                                        />
+                                      </div>
+                                      <span className="text-slate-600 font-medium">{itemCount}</span>
+                                    </div>
+                                  </td>
+                                  <td className="py-3.5 font-bold text-[#14232E] tabular-nums">
+                                    ₹{orderTotal.toLocaleString('en-IN')}
+                                  </td>
+                                  <td className="py-3.5">
+                                    <span
+                                      className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                                        statusStyles[orderStatus] || 'bg-slate-100 text-slate-600'
+                                      }`}
+                                    >
+                                      {orderStatus}
+                                    </span>
+                                  </td>
+                                  <td className="py-3.5 text-right">
+                                    <Link
+                                      to={`/order/${encodeURIComponent(orderId)}`}
+                                      className="text-slate-500 hover:text-[#E4232C] font-semibold flex items-center justify-end gap-1 ml-auto cursor-pointer"
+                                    >
+                                      <span>View Details</span>
+                                      <ArrowRight size={12} className="text-[#E4232C]" />
+                                    </Link>
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
                 </div>
 
                 {/* 3. Bottom Row: 2-Cards Grid (Wishlist Preview & Quick Links) */}
@@ -732,64 +760,181 @@ export const Account = () => {
                   </button>
                 </div>
 
-                <div className="space-y-4">
-                  {displayOrders.map((order) => {
-                    const isExpanded = expandedOrderId === order.id;
-                    return (
-                      <div
-                        key={order.id}
-                        className="border border-slate-200 rounded-xl p-4 sm:p-5 hover:border-slate-300 transition-colors space-y-4 bg-white"
-                      >
-                        <div className="flex flex-wrap items-center justify-between gap-3 text-xs border-b border-slate-100 pb-3">
-                          <div className="flex items-center gap-3">
-                            <span className="font-extrabold text-[#14232E] text-sm">
-                              {order.id}
-                            </span>
-                            <span className="text-slate-300">|</span>
-                            <span className="text-slate-500 font-medium">
-                              Placed on {order.date}
-                            </span>
-                          </div>
+                {displayOrders.length === 0 ? (
+                  <div className="py-12 text-center text-slate-500 space-y-3">
+                    <Package className="w-12 h-12 text-slate-300 mx-auto" />
+                    <h3 className="text-sm font-bold text-[#14232E]">No order history found</h3>
+                    <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                      You haven't placed any eyewear orders yet. Start exploring our high-precision optical lenses and stylish frames!
+                    </p>
+                    <Link
+                      to="/eyeglasses"
+                      className="inline-block mt-3 px-5 py-2.5 bg-[#14232E] text-white text-xs font-bold rounded-xl hover:bg-black transition-colors"
+                    >
+                      Start Shopping
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {displayOrders.map((order) => {
+                      const orderId = order.orderNumber || order.id || order._id;
+                      const isExpanded = expandedOrderId === orderId;
+                      const orderDate = order.date || (order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recently');
+                      const orderStatus = order.orderStatus || order.status || 'Processing';
+                      const orderTotal = Number(order.totalAmount !== undefined ? order.totalAmount : order.total) || 0;
+                      const trackingNum = order.trackingNumber || order.tracking?.trackingNumber || order.tracking?.trackingId || 'LH-EXP-000000';
+                      const courier = order.tracking?.courierName || 'Delhivery Express';
+                      const estDelivery = order.estimatedDelivery || order.tracking?.estimatedDelivery || 'Within 3–5 Business Days';
 
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`text-[11px] font-bold px-3 py-1 rounded-full ${order.status === 'Delivered'
-                                ? 'bg-emerald-50 text-emerald-700'
-                                : order.status === 'Processing'
-                                  ? 'bg-blue-50 text-blue-700'
-                                  : 'bg-amber-50 text-amber-700'
+                      const statusStyles = {
+                        Delivered: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
+                        Processing: 'bg-blue-50 text-blue-700 border border-blue-100',
+                        Shipped: 'bg-amber-50 text-amber-700 border border-amber-100',
+                        Cancelled: 'bg-rose-50 text-rose-700 border border-rose-100',
+                      };
+
+                      return (
+                        <div
+                          key={orderId}
+                          className="border border-slate-200 rounded-xl p-4 sm:p-5 hover:border-slate-300 transition-colors space-y-4 bg-white"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-3 text-xs border-b border-slate-100 pb-3">
+                            <div className="flex items-center gap-3">
+                              <span className="font-extrabold text-[#14232E] text-sm">
+                                {orderId}
+                              </span>
+                              <span className="text-slate-300">|</span>
+                              <span className="text-slate-500 font-medium">
+                                Placed on {orderDate}
+                              </span>
+                            </div>
+
+                            <div className="flex items-center gap-2">
+                              <span
+                                className={`text-[11px] font-bold px-3 py-1 rounded-full ${
+                                  statusStyles[orderStatus] || 'bg-slate-100 text-slate-600'
                                 }`}
-                            >
-                              ● {order.status}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => setExpandedOrderId(isExpanded ? null : order.id)}
-                              className="text-xs text-[#E4232C] font-bold flex items-center gap-1 ml-2 cursor-pointer"
-                            >
-                              <span>{isExpanded ? 'Hide' : 'Track'}</span>
-                              {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                            </button>
+                              >
+                                ● {orderStatus}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setExpandedOrderId(isExpanded ? null : orderId)}
+                                className="text-xs text-[#E4232C] font-bold flex items-center gap-1 ml-2 cursor-pointer"
+                              >
+                                <span>{isExpanded ? 'Hide Details' : 'View Details & Track'}</span>
+                                {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                              </button>
+                            </div>
                           </div>
-                        </div>
 
-                        {/* Order Summary & Pricing */}
-                        <div className="flex items-center justify-between text-xs pt-1">
-                          <div className="text-slate-500">
-                            Total: <strong className="text-[#14232E] font-bold text-sm">₹{order.total.toLocaleString('en-IN')}</strong>
+                          {/* Expanded Order Details */}
+                          {isExpanded && (
+                            <div className="pt-2 pb-3 space-y-4 border-b border-slate-100">
+                              {/* Items Breakdown */}
+                              <div className="space-y-2">
+                                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                                  Items Ordered ({order.items?.length || 0})
+                                </span>
+                                <div className="divide-y divide-slate-100">
+                                  {order.items?.map((item, idx) => {
+                                    const itemImg =
+                                      item.image ||
+                                      item.product?.images?.front ||
+                                      item.product?.colors?.[0]?.images?.front ||
+                                      item.product?.primaryImage ||
+                                      '';
+                                    const itemPrice = Number(item.unitPrice || item.product?.price || 0);
+
+                                    return (
+                                      <div key={idx} className="py-2.5 flex items-center justify-between gap-3 text-xs">
+                                        <div className="flex items-center gap-3">
+                                          <div className="w-12 h-10 bg-slate-50 border border-slate-200/80 rounded p-1 flex items-center justify-center shrink-0">
+                                            <img
+                                              src={itemImg}
+                                              alt={item.name}
+                                              className="w-full h-full object-contain mix-blend-multiply"
+                                            />
+                                          </div>
+                                          <div>
+                                            <h4 className="font-bold text-[#14232E]">{item.name}</h4>
+                                            <p className="text-[11px] text-slate-400">
+                                              {item.brand || 'The Lens Hut'} · Color: {item.selectedColor || 'Standard'} · Qty: {item.quantity}
+                                            </p>
+                                          </div>
+                                        </div>
+                                        <div className="text-right">
+                                          <span className="font-bold text-[#14232E]">
+                                            ₹{(itemPrice * (item.quantity || 1)).toLocaleString('en-IN')}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+
+                              {/* Prescription Details (if present) */}
+                              {order.prescription?.hasPrescription && (
+                                <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-3 text-xs space-y-1.5">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-bold text-[#14232E]">Optical Prescription Attached</span>
+                                    <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+                                      {order.prescription.lensPackage || 'Optical Lab Custom Lens'}
+                                    </span>
+                                  </div>
+                                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600 pt-1">
+                                    <div><strong>Right (OD) Sph:</strong> {order.prescription.rightEye?.sph || '0.00'}</div>
+                                    <div><strong>Right Cyl:</strong> {order.prescription.rightEye?.cyl || '0.00'}</div>
+                                    <div><strong>Left (OS) Sph:</strong> {order.prescription.leftEye?.sph || '0.00'}</div>
+                                    <div><strong>Left Cyl:</strong> {order.prescription.leftEye?.cyl || '0.00'}</div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Delivery & Courier Tracking Summary */}
+                              <div className="bg-[#FAF9F6] border border-slate-200/80 rounded-xl p-3.5 text-xs grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div>
+                                  <span className="text-[11px] font-bold text-slate-400 block mb-1">
+                                    SHIPPING ADDRESS
+                                  </span>
+                                  <p className="font-bold text-[#14232E]">{order.shippingAddress?.fullName}</p>
+                                  <p className="text-slate-600 text-[11px]">
+                                    {order.shippingAddress?.street}, {order.shippingAddress?.locality ? `${order.shippingAddress.locality}, ` : ''}{order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}
+                                  </p>
+                                  <p className="text-slate-500 text-[11px] mt-0.5">Phone: {order.shippingAddress?.phone}</p>
+                                </div>
+                                <div>
+                                  <span className="text-[11px] font-bold text-slate-400 block mb-1">
+                                    COURIER & DISPATCH
+                                  </span>
+                                  <p className="font-medium text-slate-700">Courier: <strong className="text-[#14232E]">{courier}</strong></p>
+                                  <p className="font-medium text-slate-700">Tracking ID: <span className="font-mono text-[#14232E]">{trackingNum}</span></p>
+                                  <p className="font-medium text-emerald-600 text-[11px] mt-0.5">Est. Delivery: {estDelivery}</p>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Order Summary & Pricing */}
+                          <div className="flex items-center justify-between text-xs pt-1">
+                            <div className="text-slate-500">
+                              Total: <strong className="text-[#14232E] font-bold text-sm">₹{orderTotal.toLocaleString('en-IN')}</strong>
+                              <span className="text-slate-400 ml-2">({order.paymentMethod || 'UPI'})</span>
+                            </div>
+                            <Link
+                              to={`/track-order?trackingId=${encodeURIComponent(trackingNum)}`}
+                              className="text-xs font-semibold text-[#14232E] hover:text-[#E4232C] flex items-center gap-1"
+                            >
+                              <span>Live Tracking</span>
+                              <ChevronRight size={14} />
+                            </Link>
                           </div>
-                          <Link
-                            to="/track-order"
-                            className="text-xs font-semibold text-[#14232E] hover:text-[#E4232C] flex items-center gap-1"
-                          >
-                            <span>Live Tracking</span>
-                            <ChevronRight size={14} />
-                          </Link>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             )}
 
