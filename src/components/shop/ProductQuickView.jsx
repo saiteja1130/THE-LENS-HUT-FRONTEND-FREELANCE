@@ -27,6 +27,8 @@ export const ProductQuickView = ({
   const handleAdd = () => {
     addToCart(product, {
       color: selectedColor,
+      variantId: activeColorObj?.id || (selectedColor ? `var-${selectedColor.toLowerCase().replace(/\s+/g, '-')}` : 'default'),
+      image: currentImage,
       size: selectedSize,
       quantity
     });

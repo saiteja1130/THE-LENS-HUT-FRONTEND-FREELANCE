@@ -21,6 +21,8 @@ export const ProductCard = ({
   const colors = product.colors || [];
   const [selectedColor, setSelectedColor] = useState(colors[0]?.name || '');
   const [addedJustNow, setAddedJustNow] = useState(false);
+  const currentColorObj = colors.find(c => c.name === selectedColor);
+  const displayImage = currentColorObj?.image || product.primaryImage || product.image || '';
   const activeWishlist = product.id ? isInWishlist(product.id) : false;
 
   const handleAddToCart = e => {
@@ -28,6 +30,8 @@ export const ProductCard = ({
     e.stopPropagation();
     addToCart(product, {
       color: selectedColor,
+      variantId: currentColorObj?.id || (selectedColor ? `var-${selectedColor.toLowerCase().replace(/\s+/g, '-')}` : 'default'),
+      image: displayImage,
       size: product.size || 'Medium'
     });
     setAddedJustNow(true);
@@ -39,10 +43,6 @@ export const ProductCard = ({
     e.stopPropagation();
     toggleWishlist(product);
   };
-
-  // Determine current image based on selected color or fallback images
-  const currentColorObj = colors.find(c => c.name === selectedColor);
-  const displayImage = currentColorObj?.image || product.primaryImage || product.image || '';
 
   // Badge text determination matching the screenshot
   const getBadge = () => {

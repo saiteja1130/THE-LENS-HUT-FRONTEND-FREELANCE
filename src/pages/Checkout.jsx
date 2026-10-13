@@ -313,13 +313,16 @@ export const Checkout = () => {
 
             {/* Step 2: Delivery Address */}
             <div className="space-y-2.5">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
                 <h2 className="text-sm sm:text-base font-bold text-[#14232E] flex items-center gap-2.5">
                   <span className="w-5 h-5 rounded-full bg-[#14232E] text-white text-[11px] flex items-center justify-center font-bold">
                     2
                   </span>
                   <span>Delivery Address</span>
                 </h2>
+                <span className="text-[11px] text-slate-500">
+                  Entered directly for each order
+                </span>
               </div>
 
               <div className="bg-white border border-slate-200/90 rounded-xl p-4 sm:p-5 transition-all space-y-3">

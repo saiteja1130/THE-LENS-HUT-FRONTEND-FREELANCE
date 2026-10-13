@@ -1,30 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
-
-/**
- * Handle API responses and standardize validation errors
- */
-const handleResponse = async (response) => {
-  let data;
-  try {
-    data = await response.json();
-  } catch {
-    data = { success: false, message: 'Server communication error' };
-  }
-
-  if (!response.ok) {
-    const errorObj = {
-      success: false,
-      status: response.status,
-      message: data.message || 'An error occurred. Please try again.',
-      errorCode: data.errorCode || 'UNKNOWN_ERROR',
-      errors: data.errors || {},
-      data: data.data || null,
-    };
-    return errorObj;
-  }
-
-  return data;
-};
+import { api } from './api';
 
 export const authApi = {
   /**
@@ -32,16 +6,17 @@ export const authApi = {
    */
   signup: async ({ fullName, email, phone, password, confirmPassword }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fullName, email, phone, password, confirmPassword }),
+      return await api.post('/auth/signup', {
+        fullName,
+        email,
+        phone,
+        password,
+        confirmPassword,
       });
-      return await handleResponse(response);
     } catch (err) {
       return {
         success: false,
-        message: 'Network error: Unable to connect to server. Ensure backend is running.',
+        message: 'Network error: Unable to connect to server.',
         errorCode: 'NETWORK_ERROR',
         errors: {},
       };
@@ -53,12 +28,7 @@ export const authApi = {
    */
   verifyEmail: async ({ email, otp }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/verify-email`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp }),
-      });
-      return await handleResponse(response);
+      return await api.post('/auth/verify-email', { email, otp });
     } catch (err) {
       return {
         success: false,
@@ -74,12 +44,7 @@ export const authApi = {
    */
   resendVerificationOTP: async ({ email }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/resend-verification`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      return await handleResponse(response);
+      return await api.post('/auth/resend-verification', { email });
     } catch (err) {
       return {
         success: false,
@@ -95,12 +60,7 @@ export const authApi = {
    */
   loginWithPassword: async ({ email, password }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      return await handleResponse(response);
+      return await api.post('/auth/login', { email, password });
     } catch (err) {
       return {
         success: false,
@@ -116,12 +76,7 @@ export const authApi = {
    */
   requestLoginOTP: async ({ email }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/request-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }),
-      });
-      return await handleResponse(response);
+      return await api.post('/auth/request-otp', { email });
     } catch (err) {
       return {
         success: false,
@@ -137,12 +92,7 @@ export const authApi = {
    */
   verifyLoginOTP: async ({ email, otp }) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp }),
-      });
-      return await handleResponse(response);
+      return await api.post('/auth/verify-otp', { email, otp });
     } catch (err) {
       return {
         success: false,
@@ -158,14 +108,8 @@ export const authApi = {
    */
   getMe: async (token) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      return await handleResponse(response);
+      const config = token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;
+      return await api.get('/auth/me', config);
     } catch (err) {
       return {
         success: false,
@@ -175,3 +119,5 @@ export const authApi = {
     }
   },
 };
+
+export default authApi;

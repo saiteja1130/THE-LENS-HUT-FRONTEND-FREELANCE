@@ -85,9 +85,9 @@ export const CartDrawer = () => {
             ) : (
               cart.map((item, idx) => {
                 const identifier = item.configurationHash || item.id;
-                const activeColor = item.product.colors?.find((c) => c.name === item.selectedColor);
-                const displayImage = activeColor?.image || item.product.primaryImage || item.productSnapshot?.image;
-                const itemUnit = item.unitPrice || item.product.price;
+                const activeColor = item.product?.colors?.find((c) => c.name?.toLowerCase() === (item.selectedColor || item.variantName)?.toLowerCase());
+                const displayImage = item.image || activeColor?.image || item.product?.primaryImage || item.productSnapshot?.image || '';
+                const itemUnit = item.unitPrice || item.product?.price || 0;
                 const config = item.configuration || {};
 
                 return (

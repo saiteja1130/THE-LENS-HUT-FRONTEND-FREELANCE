@@ -152,8 +152,8 @@ export const Cart = () => {
 
               {cart.map((item, idx) => {
                 const itemTotal = (item.unitPrice || item.product.price) * item.quantity;
-                const activeColor = item.product.colors?.find((c) => c.name === item.selectedColor);
-                const displayImage = activeColor?.image || item.product.primaryImage || item.productSnapshot?.image;
+                const activeColor = item.product?.colors?.find((c) => c.name?.toLowerCase() === (item.selectedColor || item.variantName)?.toLowerCase());
+                const displayImage = item.image || activeColor?.image || item.product?.primaryImage || item.productSnapshot?.image || '';
                 const identifier = item.configurationHash || item.id;
 
                 return (

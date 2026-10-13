@@ -67,7 +67,6 @@ export const AuthProvider = ({
         isEmailVerified: apiUser.isEmailVerified,
         joinedDate: apiUser.createdAt ? new Date(apiUser.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Recently',
         avatar: apiUser.avatar || '',
-        addresses: apiUser.addresses || [],
       };
       const storage = rememberMe ? localStorage : sessionStorage;
       storage.setItem('thelenshut_auth_token', token);
@@ -109,7 +108,6 @@ export const AuthProvider = ({
         isEmailVerified: apiUser.isEmailVerified,
         joinedDate: 'Recently',
         avatar: apiUser.avatar || '',
-        addresses: apiUser.addresses || [],
       };
       localStorage.setItem('thelenshut_auth_token', token);
       setUser(normalizedUser);
@@ -170,7 +168,6 @@ export const AuthProvider = ({
         isEmailVerified: true,
         joinedDate: 'Recently',
         avatar: apiUser.avatar || '',
-        addresses: apiUser.addresses || [],
       };
       localStorage.setItem('thelenshut_auth_token', token);
       setUser(normalizedUser);
@@ -228,64 +225,6 @@ export const AuthProvider = ({
       ...prev,
       ...data
     } : null);
-  };
-  const addAddress = address => {
-    if (!user) return;
-    const newAddr = {
-      ...address,
-      id: 'addr-' + Date.now(),
-      isDefault: user.addresses.length === 0 ? true : address.isDefault
-    };
-    setUser(prev => {
-      if (!prev) return null;
-      let list = [...prev.addresses];
-      if (newAddr.isDefault) {
-        list = list.map(a => ({
-          ...a,
-          isDefault: false
-        }));
-      }
-      return {
-        ...prev,
-        addresses: [...list, newAddr]
-      };
-    });
-  };
-  const updateAddress = (id, address) => {
-    if (!user) return;
-    setUser(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        addresses: prev.addresses.map(a => a.id === id ? {
-          ...a,
-          ...address
-        } : a)
-      };
-    });
-  };
-  const deleteAddress = id => {
-    if (!user) return;
-    setUser(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        addresses: prev.addresses.filter(a => a.id !== id)
-      };
-    });
-  };
-  const setDefaultAddress = id => {
-    if (!user) return;
-    setUser(prev => {
-      if (!prev) return null;
-      return {
-        ...prev,
-        addresses: prev.addresses.map(a => ({
-          ...a,
-          isDefault: a.id === id
-        }))
-      };
-    });
   };
   const placeOrder = (orderData) => {
     const orderNum = 'LH-2026-' + Math.floor(1000 + Math.random() * 9000);
@@ -372,10 +311,6 @@ export const AuthProvider = ({
     forgotPassword,
     resetPassword,
     updateProfile,
-    addAddress,
-    updateAddress,
-    deleteAddress,
-    setDefaultAddress,
     placeOrder
   }}>
       {children}

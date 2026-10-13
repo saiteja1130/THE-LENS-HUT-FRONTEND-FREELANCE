@@ -17,8 +17,12 @@ export const Wishlist = () => {
   const [addedId, setAddedId] = useState(null);
 
   const handleAddToCart = (product) => {
+    const firstColor = product.colors?.[0]?.name || '';
+    const firstImage = product.colors?.[0]?.image || product.primaryImage || product.image || '';
     addToCart(product, {
-      color: product.colors?.[0]?.name || '',
+      color: firstColor,
+      variantId: product.colors?.[0]?.id || (firstColor ? `var-${firstColor.toLowerCase().replace(/\s+/g, '-')}` : 'default'),
+      image: firstImage,
       size: product.size || 'Medium'
     });
     setAddedId(product.id);

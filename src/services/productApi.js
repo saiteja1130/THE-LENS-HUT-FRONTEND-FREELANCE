@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api/v1';
+import { api } from './api';
 
 export const normalizeFrontendProduct = (p) => {
   if (!p) return null;
@@ -46,6 +46,7 @@ export const normalizeFrontendProduct = (p) => {
     isNew: Boolean(p.isNewArrival || p.isNew),
     inStock: p.stock !== undefined ? p.stock > 0 : true,
     stock: p.stock !== undefined ? p.stock : 0,
+    isInWishlist: Boolean(p.isInWishlist),
   };
 };
 
@@ -62,22 +63,18 @@ export const productApi = {
         }
       });
 
-      const response = await fetch(`${API_BASE_URL}/products?${queryParams.toString()}`, {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const queryString = queryParams.toString();
+      const res = await api.get(`/products${queryString ? `?${queryString}` : ''}`);
 
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && Array.isArray(result.data)) {
-          return {
-            success: true,
-            data: result.data.map(normalizeFrontendProduct),
-            pagination: result.pagination || { total: result.data.length, page: 1, limit: result.data.length, totalPages: 1 },
-          };
-        }
+      if (res?.success && Array.isArray(res.data)) {
+        return {
+          success: true,
+          data: res.data.map(normalizeFrontendProduct),
+          pagination: res.pagination || { total: res.data.length, page: 1, limit: res.data.length, totalPages: 1 },
+        };
       }
     } catch (error) {
-      console.warn('[ProductApi Frontend] Live API unavailable:', error.message);
+      console.warn('[ProductApi Axios] Live API unavailable:', error.message);
     }
 
     return {
@@ -92,21 +89,15 @@ export const productApi = {
    */
   getProductBySlug: async (slugOrId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/products/${slugOrId}`, {
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && result.data) {
-          return {
-            success: true,
-            data: normalizeFrontendProduct(result.data),
-          };
-        }
+      const res = await api.get(`/products/${slugOrId}`);
+      if (res?.success && res.data) {
+        return {
+          success: true,
+          data: normalizeFrontendProduct(res.data),
+        };
       }
     } catch (error) {
-      console.warn('[ProductApi Frontend] Single product fetch failed:', error.message);
+      console.warn('[ProductApi Axios] Single product fetch failed:', error.message);
     }
 
     return {
@@ -120,21 +111,15 @@ export const productApi = {
    */
   getFeaturedProducts: async (limit = 5) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/products/featured?limit=${limit}`, {
-        headers: { 'Content-Type': 'application/json' },
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success && Array.isArray(result.data)) {
-          return {
-            success: true,
-            data: result.data.map(normalizeFrontendProduct),
-          };
-        }
+      const res = await api.get(`/products/featured?limit=${limit}`);
+      if (res?.success && Array.isArray(res.data)) {
+        return {
+          success: true,
+          data: res.data.map(normalizeFrontendProduct),
+        };
       }
     } catch (error) {
-      console.warn('[ProductApi Frontend] Featured products fetch failed:', error.message);
+      console.warn('[ProductApi Axios] Featured products fetch failed:', error.message);
     }
 
     return {
