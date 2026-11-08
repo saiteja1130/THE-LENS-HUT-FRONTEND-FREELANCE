@@ -77,37 +77,14 @@ export const TrackOrder = () => {
           setOrder(res.data);
           setIsLoading(false);
           return;
+        } else {
+          setErrorMsg(res?.message || `Could not find order details for "${queryId}". Please check the order or tracking number.`);
         }
       } catch (err) {
-        console.warn('[TrackOrder] API lookup failed, trying local storage:', err);
-      }
-
-      // Local storage fallback
-      try {
-        const localOrders = [
-          ...(JSON.parse(localStorage.getItem('tlh_orders') || '[]')),
-          ...(JSON.parse(localStorage.getItem('thelenshut_orders') || '[]')),
-        ];
-
-        const match = localOrders.find(
-          (o) =>
-            o.id?.toLowerCase() === queryId.toLowerCase() ||
-            o.orderNumber?.toLowerCase() === queryId.toLowerCase() ||
-            o.trackingNumber?.toLowerCase() === queryId.toLowerCase() ||
-            o.tracking?.trackingNumber?.toLowerCase() === queryId.toLowerCase()
-        );
-
-        if (match) {
-          setOrder(match);
-          setIsLoading(false);
-          return;
-        }
-      } catch (e) {
-        // ignore
+        setErrorMsg(`Could not find order details for "${queryId}". Please check the order or tracking number.`);
       }
 
       setIsLoading(false);
-      setErrorMsg(`Could not find order details for "${queryId}". Please check the order or tracking number.`);
     };
 
     fetchOrder();
@@ -135,9 +112,9 @@ export const TrackOrder = () => {
   const isCancelled = (order?.orderStatus || order?.status || '').toLowerCase() === 'cancelled';
 
   const orderNumber = order?.orderNumber || order?.id || queryId;
-  const trackingNumber = order?.trackingNumber || order?.tracking?.trackingNumber || order?.tracking?.trackingId || 'LH-EXP-000000';
-  const courierName = order?.tracking?.courierName || 'Delhivery Express';
-  const estimatedDelivery = order?.estimatedDelivery || order?.tracking?.estimatedDelivery || 'Within 3–5 Business Days';
+  const trackingNumber = order?.trackingNumber || order?.tracking?.trackingNumber || order?.tracking?.trackingId || '';
+  const courierName = order?.tracking?.courierName || '';
+  const estimatedDelivery = order?.estimatedDelivery || order?.tracking?.estimatedDelivery || '';
   const orderDate = order?.date || (order?.createdAt ? new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recently');
   const orderTotal = Number(order?.totalAmount !== undefined ? order.totalAmount : (order?.total || 0));
 
@@ -305,15 +282,15 @@ export const TrackOrder = () => {
               <div className="bg-[#FAF9F6] border border-slate-200/80 rounded-xl p-4 text-xs grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <span className="text-[11px] text-slate-400 block font-medium">COURIER PARTNER</span>
-                  <strong className="text-sm text-[#14232E]">{courierName}</strong>
+                  <strong className="text-sm text-[#14232E]">{courierName || 'Pending Assignment'}</strong>
                 </div>
                 <div>
                   <span className="text-[11px] text-slate-400 block font-medium">TRACKING NUMBER</span>
-                  <span className="text-sm font-mono font-bold text-[#14232E]">{trackingNumber}</span>
+                  <span className="text-sm font-mono font-bold text-[#14232E]">{trackingNumber || 'Not Yet Generated'}</span>
                 </div>
                 <div>
                   <span className="text-[11px] text-slate-400 block font-medium">ESTIMATED DELIVERY</span>
-                  <strong className="text-sm text-emerald-600">{estimatedDelivery}</strong>
+                  <strong className="text-sm text-emerald-600">{estimatedDelivery || 'Calculated after dispatch'}</strong>
                 </div>
               </div>
             </div>
@@ -350,7 +327,7 @@ export const TrackOrder = () => {
                         <td className="py-2.5 font-mono">{order.prescription.rightEye?.sph || '0.00'}</td>
                         <td className="py-2.5 font-mono">{order.prescription.rightEye?.cyl || '0.00'}</td>
                         <td className="py-2.5 font-mono">{order.prescription.rightEye?.axis || '-'}</td>
-                        <td className="py-2.5" rowSpan={2}>{order.prescription.pd || '63 mm'}</td>
+                        <td className="py-2.5" rowSpan={2}>{order.prescription.pd ? `${order.prescription.pd} mm` : '-'}</td>
                       </tr>
                       <tr>
                         <td className="py-2.5 font-bold text-[#14232E]">Left Eye (OS)</td>

@@ -102,6 +102,11 @@ export const Checkout = () => {
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
 
+    if (displayItems.length === 0) {
+      toast.warning('Your cart is empty');
+      return;
+    }
+
     if (!fullName.trim() || !contactPhone.trim() || !street.trim() || !pincode.trim()) {
       toast.warning('Please complete all required shipping address fields');
       return;
@@ -134,8 +139,8 @@ export const Checkout = () => {
       productId: item.productId || item.product?.id,
       productType: item.productType || item.configuration?.productType || 'eyeglasses',
       name: item.product?.name || item.productSnapshot?.name,
-      brand: item.product?.brand || item.productSnapshot?.brand || 'The Lens Hut',
-      sku: item.product?.sku || item.productSnapshot?.sku || 'LH-OPTICAL',
+      brand: item.product?.brand || item.productSnapshot?.brand || '',
+      sku: item.product?.sku || item.productSnapshot?.sku || '',
       image: item.product?.colors?.[0]?.image || item.product?.primaryImage || item.product?.image || item.productSnapshot?.image,
       configuration: item.configuration || {},
       selectedColor: item.selectedColor || item.configuration?.variantName || 'Standard',
@@ -234,6 +239,22 @@ export const Checkout = () => {
             </div>
           </div>
         </div>
+      </div>
+    );
+  }
+
+  // Empty Cart State
+  if (!confirmedOrder && displayItems.length === 0) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center py-16 px-4 text-center">
+        <h2 className="text-xl font-bold text-[#14232E] mb-2">Your Cart is Empty</h2>
+        <p className="text-slate-500 text-xs sm:text-sm mb-6">Add optical frames or contact lenses before proceeding to checkout.</p>
+        <Link
+          to="/shop"
+          className="px-6 py-3 bg-[#E4232C] hover:bg-[#C81921] text-white text-xs font-bold rounded-lg transition-colors shadow-xs"
+        >
+          Explore Collection
+        </Link>
       </div>
     );
   }
@@ -539,7 +560,23 @@ export const Checkout = () => {
                   const unitPrice = item.unitPrice || item.product?.price || 0;
                   const itemTotal = unitPrice * (item.quantity || 1);
 
-                  return (
+                  // Empty Cart State
+  if (!confirmedOrder && displayItems.length === 0) {
+    return (
+      <div className="min-h-[60vh] flex flex-col items-center justify-center py-16 px-4 text-center">
+        <h2 className="text-xl font-bold text-[#14232E] mb-2">Your Cart is Empty</h2>
+        <p className="text-slate-500 text-xs sm:text-sm mb-6">Add optical frames or contact lenses before proceeding to checkout.</p>
+        <Link
+          to="/shop"
+          className="px-6 py-3 bg-[#E4232C] hover:bg-[#C81921] text-white text-xs font-bold rounded-lg transition-colors shadow-xs"
+        >
+          Explore Collection
+        </Link>
+      </div>
+    );
+  }
+
+  return (
                     <div
                       key={item.configurationHash || item.product?.id || idx}
                       className="flex items-start justify-between gap-3 pb-3 border-b border-slate-100 last:border-b-0 last:pb-0"

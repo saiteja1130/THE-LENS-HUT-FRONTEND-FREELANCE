@@ -12,7 +12,7 @@ export const bannerApi = {
         data: Array.isArray(res?.data) ? res.data : [],
       };
     } catch (error) {
-      console.warn('[BannerApi Axios] Backend banner fetch failed, using fallback slides:', error.message);
+      console.warn('[BannerApi Axios] Backend banner fetch failed:', error.message);
       return { success: false, data: [] };
     }
   },

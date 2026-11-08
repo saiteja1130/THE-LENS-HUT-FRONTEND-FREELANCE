@@ -163,12 +163,18 @@ export const Account = () => {
           <aside className="lg:col-span-3 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
             {/* User Profile Mini Header */}
             <div className="flex flex-col items-center text-center pb-4 border-b border-slate-100">
-              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-100 shadow-xs mb-2.5">
-                <img
-                  src={user?.avatar || '/images/home/promo-sunglasses-man.png'}
-                  alt={user?.name || 'Account'}
-                  className="w-full h-full object-cover"
-                />
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-100 shadow-xs mb-2.5 flex items-center justify-center bg-slate-100">
+                {user?.avatar ? (
+                  <img
+                    src={user.avatar}
+                    alt={user?.name || 'Account'}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-xl font-bold text-[#14232E]">
+                    {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                  </span>
+                )}
               </div>
               <h3 className="text-base font-bold text-[#14232E]">
                 {user?.name || 'My Account'}
@@ -184,7 +190,7 @@ export const Account = () => {
                 { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={17} /> },
                 { id: 'profile', label: 'Profile Information', icon: <UserIcon size={17} /> },
                 { id: 'orders', label: 'My Orders', icon: <Package size={17} /> },
-                { id: 'wishlist', label: 'Wishlist', icon: <Heart size={17} />, badge: 2 },
+                { id: 'wishlist', label: 'Wishlist', icon: <Heart size={17} />, badge: wishlist?.length > 0 ? wishlist.length : undefined },
                 { id: 'settings', label: 'Account Settings', icon: <Settings size={17} /> }
               ].map((item) => {
                 const isActive = activeTab === item.id;
@@ -294,12 +300,18 @@ export const Account = () => {
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                       {/* Avatar with Camera badge */}
                       <div className="relative shrink-0">
-                        <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-slate-100 shadow-xs">
-                          <img
-                            src={user?.avatar || '/images/home/promo-sunglasses-man.png'}
-                            alt={user?.name || 'User'}
-                            className="w-full h-full object-cover"
-                          />
+                        <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-slate-100 shadow-xs flex items-center justify-center bg-slate-100">
+                          {user?.avatar ? (
+                            <img
+                              src={user.avatar}
+                              alt={user?.name || 'User'}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-2xl font-bold text-[#14232E]">
+                              {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                            </span>
+                          )}
                         </div>
                         <button
                           type="button"
@@ -367,7 +379,7 @@ export const Account = () => {
                               Member Since
                             </span>
                             <span className="text-xs sm:text-sm font-bold text-[#14232E]">
-                              {user?.joinedDate || 'May 2025'}
+                              {user?.joinedDate || (user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Member')}
                             </span>
                           </div>
                         </div>
@@ -587,60 +599,70 @@ export const Account = () => {
                       </Link>
                     </div>
 
-                    {/* 3 Products Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                      {wishlistPreviewItems.map((prod) => (
-                        <div
-                          key={prod.id}
-                          className="bg-white border border-slate-100 rounded-xl overflow-hidden hover:border-slate-300 hover:shadow-2xs transition-all flex flex-col justify-between"
-                        >
-                          <div className="relative aspect-4/3 bg-[#F8F9FA] p-3 flex items-center justify-center">
-                            {/* Discount badge */}
-                            <span className="absolute top-2 left-2 bg-[#E4232C] text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase">
-                              {prod.discountPercent}% OFF
-                            </span>
+                    {/* Products Grid */}
+                    {wishlistPreviewItems.length === 0 ? (
+                      <div className="py-8 text-center text-xs text-slate-400">
+                        Your wishlist is currently empty.
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                        {wishlistPreviewItems.map((prod) => (
+                          <div
+                            key={prod.id}
+                            className="bg-white border border-slate-100 rounded-xl overflow-hidden hover:border-slate-300 hover:shadow-2xs transition-all flex flex-col justify-between"
+                          >
+                            <div className="relative aspect-4/3 bg-[#F8F9FA] p-3 flex items-center justify-center">
+                              {/* Discount badge */}
+                              {prod.discountPercent > 0 && (
+                                <span className="absolute top-2 left-2 bg-[#E4232C] text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase">
+                                  {prod.discountPercent}% OFF
+                                </span>
+                              )}
 
-                            {/* Heart indicator */}
-                            <button
-                              type="button"
-                              className="absolute top-2 right-2 p-1 text-slate-400 hover:text-[#E4232C]"
-                            >
-                              <Heart
-                                size={14}
-                                className={prod.isFav ? 'fill-[#E4232C] text-[#E4232C]' : ''}
-                              />
-                            </button>
+                              {/* Heart indicator */}
+                              <button
+                                type="button"
+                                className="absolute top-2 right-2 p-1 text-slate-400 hover:text-[#E4232C]"
+                              >
+                                <Heart
+                                  size={14}
+                                  className={prod.isFav ? 'fill-[#E4232C] text-[#E4232C]' : ''}
+                                />
+                              </button>
 
-                            <Link to={`/product/${prod.slug}`} className="w-full h-full flex items-center justify-center">
-                              <img
-                                src={prod.image}
-                                alt={prod.name}
-                                className="w-full h-full object-contain mix-blend-multiply hover:scale-105 transition-transform"
-                              />
-                            </Link>
-                          </div>
+                              <Link to={`/product/${prod.slug}`} className="w-full h-full flex items-center justify-center">
+                                <img
+                                  src={prod.image}
+                                  alt={prod.name}
+                                  className="w-full h-full object-contain mix-blend-multiply hover:scale-105 transition-transform"
+                                />
+                              </Link>
+                            </div>
 
-                          <div className="p-3 space-y-1">
-                            <Link to={`/product/${prod.slug}`}>
-                              <h4 className="text-xs font-bold text-[#14232E] hover:text-[#E4232C] line-clamp-1">
-                                {prod.name}
-                              </h4>
-                            </Link>
-                            <p className="text-[10px] text-slate-400 capitalize">
-                              {prod.category}
-                            </p>
-                            <div className="flex items-baseline gap-1.5 pt-1">
-                              <span className="text-xs font-bold text-[#14232E] tabular-nums">
-                                ₹{prod.price.toLocaleString('en-IN')}
-                              </span>
-                              <span className="text-[10px] text-slate-400 line-through tabular-nums">
-                                ₹{prod.mrp.toLocaleString('en-IN')}
-                              </span>
+                            <div className="p-3 space-y-1">
+                              <Link to={`/product/${prod.slug}`}>
+                                <h4 className="text-xs font-bold text-[#14232E] hover:text-[#E4232C] line-clamp-1">
+                                  {prod.name}
+                                </h4>
+                              </Link>
+                              <p className="text-[10px] text-slate-400 capitalize">
+                                {prod.category}
+                              </p>
+                              <div className="flex items-baseline gap-1.5 pt-1">
+                                <span className="text-xs font-bold text-[#14232E] tabular-nums">
+                                  ₹{prod.price.toLocaleString('en-IN')}
+                                </span>
+                                {prod.mrp > prod.price && (
+                                  <span className="text-[10px] text-slate-400 line-through tabular-nums">
+                                    ₹{prod.mrp.toLocaleString('en-IN')}
+                                  </span>
+                                )}
+                              </div>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   {/* Right: Quick Links Card (lg:col-span-4) */}
@@ -782,9 +804,9 @@ export const Account = () => {
                       const orderDate = order.date || (order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recently');
                       const orderStatus = order.orderStatus || order.status || 'Processing';
                       const orderTotal = Number(order.totalAmount !== undefined ? order.totalAmount : order.total) || 0;
-                      const trackingNum = order.trackingNumber || order.tracking?.trackingNumber || order.tracking?.trackingId || 'LH-EXP-000000';
-                      const courier = order.tracking?.courierName || 'Delhivery Express';
-                      const estDelivery = order.estimatedDelivery || order.tracking?.estimatedDelivery || 'Within 3–5 Business Days';
+                      const trackingNum = order.trackingNumber || order.tracking?.trackingNumber || order.tracking?.trackingId || '';
+                      const courier = order.tracking?.courierName || '';
+                      const estDelivery = order.estimatedDelivery || order.tracking?.estimatedDelivery || '';
 
                       const statusStyles = {
                         Delivered: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
@@ -908,9 +930,11 @@ export const Account = () => {
                                   <span className="text-[11px] font-bold text-slate-400 block mb-1">
                                     COURIER & DISPATCH
                                   </span>
-                                  <p className="font-medium text-slate-700">Courier: <strong className="text-[#14232E]">{courier}</strong></p>
-                                  <p className="font-medium text-slate-700">Tracking ID: <span className="font-mono text-[#14232E]">{trackingNum}</span></p>
-                                  <p className="font-medium text-emerald-600 text-[11px] mt-0.5">Est. Delivery: {estDelivery}</p>
+                                  <p className="font-medium text-slate-700">Courier: <strong className="text-[#14232E]">{courier || 'Pending dispatch'}</strong></p>
+                                  <p className="font-medium text-slate-700">Tracking ID: <span className="font-mono text-[#14232E]">{trackingNum || 'Pending'}</span></p>
+                                  {estDelivery && (
+                                    <p className="font-medium text-emerald-600 text-[11px] mt-0.5">Est. Delivery: {estDelivery}</p>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -920,15 +944,21 @@ export const Account = () => {
                           <div className="flex items-center justify-between text-xs pt-1">
                             <div className="text-slate-500">
                               Total: <strong className="text-[#14232E] font-bold text-sm">₹{orderTotal.toLocaleString('en-IN')}</strong>
-                              <span className="text-slate-400 ml-2">({order.paymentMethod || 'UPI'})</span>
+                              {order.paymentMethod && <span className="text-slate-400 ml-2">({order.paymentMethod})</span>}
                             </div>
-                            <Link
-                              to={`/track-order?trackingId=${encodeURIComponent(trackingNum)}`}
-                              className="text-xs font-semibold text-[#14232E] hover:text-[#E4232C] flex items-center gap-1"
-                            >
-                              <span>Live Tracking</span>
-                              <ChevronRight size={14} />
-                            </Link>
+                            {trackingNum ? (
+                              <Link
+                                to={`/track-order?trackingId=${encodeURIComponent(trackingNum)}`}
+                                className="text-xs font-semibold text-[#14232E] hover:text-[#E4232C] flex items-center gap-1"
+                              >
+                                <span>Live Tracking</span>
+                                <ChevronRight size={14} />
+                              </Link>
+                            ) : (
+                              <span className="text-[11px] text-slate-400">
+                                Tracking available once shipped
+                              </span>
+                            )}
                           </div>
                         </div>
                       );

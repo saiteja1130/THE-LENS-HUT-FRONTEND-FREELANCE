@@ -43,6 +43,9 @@ export const Footer = () => {
                   <Link to="/about-us" className="hover:text-white transition-colors">About</Link>
                 </li>
                 <li>
+                  <Link to="/contact-us" className="hover:text-white transition-colors">Contact Us</Link>
+                </li>
+                <li>
                   <Link to="/wishlist" className="hover:text-white transition-colors">Wishlist</Link>
                 </li>
                 <li>
@@ -61,6 +64,9 @@ export const Footer = () => {
               Customer Care
             </h4>
             <ul className="space-y-2.5">
+              <li>
+                <Link to="/contact-us" className="hover:text-white transition-colors">Contact Us</Link>
+              </li>
               <li>
                 <Link to="/faqs" className="hover:text-white transition-colors">Help Center</Link>
               </li>

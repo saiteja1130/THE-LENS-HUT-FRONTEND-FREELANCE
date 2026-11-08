@@ -62,7 +62,7 @@ export function normalizeProduct(product) {
           sku: `${(product.sku || product.id).toUpperCase()}-${col.name.slice(0, 3).toUpperCase()}`,
           price: product.price,
           compareAtPrice: product.mrp,
-          stock: product.inStock ? 25 : 0,
+          stock: typeof product.stock === 'number' ? product.stock : (product.inStock ? 1 : 0),
           isDefault: idx === 0,
         };
       });
@@ -83,7 +83,7 @@ export function normalizeProduct(product) {
         sku: (product.sku || product.id).toUpperCase(),
         price: product.price,
         compareAtPrice: product.mrp,
-        stock: product.inStock ? 25 : 0,
+        stock: typeof product.stock === 'number' ? product.stock : (product.inStock ? 1 : 0),
         images: defaultProdImages,
         isDefault: true
       }];
@@ -147,10 +147,10 @@ export function normalizeProduct(product) {
         pdRange: { min: 50, max: 75, step: 1 }
       },
       frameSpecifications: product.specifications || {
-        shape: product.frameShape || 'Round',
-        frameType: product.frameType || 'Full Rim',
-        material: product.material || 'Titanium',
-        size: product.size || 'Medium'
+        shape: product.frameShape || '',
+        frameType: product.frameType || '',
+        material: product.material || '',
+        size: product.size || ''
       }
     };
   }
@@ -231,10 +231,10 @@ export function normalizeProduct(product) {
         }
       ],
       frameSpecifications: product.specifications || {
-        shape: product.frameShape || 'Aviator',
-        frameType: product.frameType || 'Full Rim',
-        material: product.material || 'Acetate & Metal',
-        size: product.size || 'Medium'
+        shape: product.frameShape || '',
+        frameType: product.frameType || '',
+        material: product.material || '',
+        size: product.size || ''
       }
     };
   }

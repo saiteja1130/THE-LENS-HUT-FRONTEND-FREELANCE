@@ -98,6 +98,9 @@ export const Header = () => {
   }, {
     label: 'About Us',
     path: '/about-us'
+  }, {
+    label: 'Contact Us',
+    path: '/contact-us'
   }];
   return <>
       <AnnouncementBar />
@@ -177,6 +180,12 @@ export const Header = () => {
             isActive
           }) => `text-sm font-medium py-2 hover:text-[#E4232C] transition-colors relative ${isActive ? 'text-[#E4232C]' : 'text-slate-700'}`}>
               About
+            </NavLink>
+
+            <NavLink to="/contact-us" className={({
+            isActive
+          }) => `text-sm font-medium py-2 hover:text-[#E4232C] transition-colors relative ${isActive ? 'text-[#E4232C]' : 'text-slate-700'}`}>
+              Contact
             </NavLink>
 
           

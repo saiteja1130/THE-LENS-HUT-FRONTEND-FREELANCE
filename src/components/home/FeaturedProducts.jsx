@@ -23,7 +23,7 @@ export const FeaturedProducts = () => {
             price: p.price,
             mrp: p.mrp,
             discountPercent: p.discountPercent,
-            rating: p.rating || 5,
+            rating: p.rating || 0,
             image: p.images?.front || p.primaryImage || p.image || '',
           }));
           setProducts(mapped);
@@ -39,6 +39,10 @@ export const FeaturedProducts = () => {
       isMounted = false;
     };
   }, []);
+
+  if (!isLoading && products.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-12 bg-white">
@@ -114,12 +118,14 @@ export const FeaturedProducts = () => {
                 {/* Card Content */}
                 <div className="p-2 sm:p-4 flex flex-col flex-1 justify-between space-y-2">
                   <div>
-                    {/* 5-Star Rating */}
-                    <div className="flex items-center gap-0.5 text-amber-400 text-xs mb-1.5">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} size={12} className="fill-amber-400 text-amber-400" />
-                      ))}
-                    </div>
+                    {/* Rating if present */}
+                    {item.rating > 0 && (
+                      <div className="flex items-center gap-0.5 text-amber-400 text-xs mb-1.5">
+                        {[...Array(Math.round(item.rating))].map((_, i) => (
+                          <Star key={i} size={12} className="fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                    )}
 
                     {/* Product Name */}
                     <Link to={`/product/${item.slug}`}>

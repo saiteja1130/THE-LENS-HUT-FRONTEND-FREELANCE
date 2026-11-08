@@ -303,16 +303,21 @@ export const ProductDetail = () => {
 
                 {activeTab === 'reviews' && (
                   <div className="space-y-3">
-                    <div className="flex items-center gap-2">
-                      <div className="flex text-amber-400">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={15} className="fill-amber-400" />
-                        ))}
+                    {product.rating > 0 ? (
+                      <div className="flex items-center gap-2">
+                        <div className="flex text-amber-400">
+                          {[...Array(Math.round(product.rating))].map((_, i) => (
+                            <Star key={i} size={15} className="fill-amber-400" />
+                          ))}
+                        </div>
+                        <span className="font-bold text-[#14232E]">{product.rating} out of 5 stars</span>
+                        {product.reviewCount > 0 && (
+                          <span className="text-slate-400">· {product.reviewCount} customer reviews</span>
+                        )}
                       </div>
-                      <span className="font-bold text-[#14232E]">{product.rating || 4.8} out of 5 stars</span>
-                      <span className="text-slate-400">· {product.reviewCount || 120} verified customer ratings</span>
-                    </div>
-                    <p className="text-slate-500 italic">"Extremely comfortable glasses. Crisp vision and stylish look." - Verified Customer</p>
+                    ) : (
+                      <p className="text-slate-500 text-xs">No reviews yet for this product.</p>
+                    )}
                   </div>
                 )}
               </div>
@@ -325,24 +330,28 @@ export const ProductDetail = () => {
             
             {/* Header: Brand & Title */}
             <div>
-              <span className="text-xs text-slate-400 font-semibold block mb-1">
-                {product.brand || 'The Lens Hut'}
-              </span>
+              {product.brand && (
+                <span className="text-xs text-slate-400 font-semibold block mb-1">
+                  {product.brand}
+                </span>
+              )}
               <h1 className="text-2xl sm:text-3xl font-extrabold text-[#14232E] tracking-tight">
                 {product.name}
               </h1>
 
               {/* Rating Row */}
-              <div className="flex items-center gap-2 mt-2">
-                <div className="flex text-amber-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} size={14} className="fill-amber-400" />
-                  ))}
+              {product.rating > 0 && (
+                <div className="flex items-center gap-2 mt-2">
+                  <div className="flex text-amber-400">
+                    {[...Array(Math.round(product.rating))].map((_, i) => (
+                      <Star key={i} size={14} className="fill-amber-400" />
+                    ))}
+                  </div>
+                  <span className="text-xs font-semibold text-slate-600">
+                    {product.rating} {product.reviewCount > 0 && <span className="text-slate-400 font-normal">({product.reviewCount} Reviews)</span>}
+                  </span>
                 </div>
-                <span className="text-xs font-semibold text-slate-600">
-                  {product.rating || 4.8} <span className="text-slate-400 font-normal">({product.reviewCount || 142} Reviews)</span>
-                </span>
-              </div>
+              )}
             </div>
 
             {/* Pricing Section */}

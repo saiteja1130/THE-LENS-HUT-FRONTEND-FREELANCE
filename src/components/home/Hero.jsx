@@ -43,7 +43,7 @@ export const Hero = () => {
             primaryBtnLink: banner.link || '/shop',
             secondaryBtnText: banner.secondaryBtnText || 'Explore Collection',
             secondaryBtnLink: banner.secondaryBtnLink || banner.link || '/shop',
-            image: banner.imageUrl || '/images/home/hero-slide-1.png',
+            image: banner.imageUrl || '',
           };
         });
 

@@ -8,15 +8,7 @@ export const AuthProvider = ({
   const [user, setUser] = useState(() => {
     try {
       const saved = localStorage.getItem('tlh_auth_user');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed.id === 'usr-tlh-101' || parsed.email === 'saiteja@gmail.com' || parsed.name === 'Aarav Sharma') {
-          localStorage.removeItem('tlh_auth_user');
-          return null;
-        }
-        return parsed;
-      }
-      return null;
+      return saved ? JSON.parse(saved) : null;
     } catch {
       return null;
     }
@@ -124,7 +116,7 @@ export const AuthProvider = ({
         phone: apiUser.phone || '',
         role: apiUser.role,
         isEmailVerified: apiUser.isEmailVerified,
-        joinedDate: 'Recently',
+        joinedDate: apiUser.createdAt ? new Date(apiUser.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '',
         avatar: apiUser.avatar || '',
       };
       localStorage.setItem('thelenshut_auth_token', token);
@@ -184,7 +176,7 @@ export const AuthProvider = ({
         phone: apiUser.phone || '',
         role: apiUser.role,
         isEmailVerified: true,
-        joinedDate: 'Recently',
+        joinedDate: apiUser.createdAt ? new Date(apiUser.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : '',
         avatar: apiUser.avatar || '',
       };
       localStorage.setItem('thelenshut_auth_token', token);
@@ -245,105 +237,24 @@ export const AuthProvider = ({
     } : null);
   };
   const placeOrder = async (orderData) => {
-    // 1. Try placing order with backend API
-    try {
-      const apiResponse = await orderApi.createOrder(orderData);
-      if (apiResponse.success && apiResponse.data) {
-        const serverOrder = apiResponse.data;
-        const normalizedOrder = {
-          ...serverOrder,
-          id: serverOrder._id || serverOrder.id || serverOrder.orderNumber,
-          date: new Date(serverOrder.createdAt || serverOrder.orderDate || Date.now()).toLocaleDateString('en-GB', {
-            day: '2-digit',
-            month: 'short',
-            year: 'numeric'
-          }),
-        };
+    const apiResponse = await orderApi.createOrder(orderData);
+    if (apiResponse?.success && apiResponse?.data) {
+      const serverOrder = apiResponse.data;
+      const normalizedOrder = {
+        ...serverOrder,
+        id: serverOrder._id || serverOrder.id || serverOrder.orderNumber,
+        date: new Date(serverOrder.createdAt || serverOrder.orderDate || Date.now()).toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric'
+        }),
+      };
 
-        setOrders((prev) => [normalizedOrder, ...prev]);
-
-        // Sync to admin thelenshut_orders in localStorage for local fallback preview
-        try {
-          const existing = localStorage.getItem('thelenshut_orders');
-          const parsed = existing ? JSON.parse(existing) : [];
-          localStorage.setItem('thelenshut_orders', JSON.stringify([normalizedOrder, ...parsed]));
-        } catch {
-          // ignore
-        }
-
-        return normalizedOrder;
-      }
-    } catch (apiErr) {
-      console.warn('[AuthContext] Backend order creation failed, falling back to local order:', apiErr);
+      setOrders((prev) => [normalizedOrder, ...prev]);
+      return normalizedOrder;
     }
 
-    // 2. Resilient local fallback if backend is unreachable
-    const orderNum = 'LH-' + Math.floor(100000 + Math.random() * 900000);
-    const nowIso = new Date().toISOString();
-
-    const firstEyeglassRx = orderData.items?.find((i) => i.configuration?.prescription?.od?.sph)?.configuration?.prescription;
-
-    const newOrder = {
-      id: orderNum,
-      orderNumber: orderNum,
-      date: new Date().toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'short',
-        year: 'numeric'
-      }),
-      orderDate: nowIso,
-      customer: {
-        id: user?.id || 'cust-guest',
-        name: user?.name || orderData.shippingAddress?.fullName || 'Guest Customer',
-        email: user?.email || 'customer@thelenshut.com',
-        phone: user?.phone || orderData.shippingAddress?.phone || '+91 98765 00000'
-      },
-      itemCountText: `${orderData.items?.length || 1} item${orderData.items?.length > 1 ? 's' : ''}`,
-      items: orderData.items,
-      subtotal: orderData.subtotal,
-      discount: orderData.discount,
-      discountAmount: orderData.discount || 0,
-      shipping: orderData.shipping,
-      shippingFee: orderData.shipping || 0,
-      total: orderData.total,
-      totalAmount: orderData.total,
-      status: 'Placed',
-      orderStatus: 'Processing',
-      paymentMethod: orderData.paymentMethod || 'UPI',
-      paymentStatus: 'Paid',
-      shippingAddress: orderData.shippingAddress,
-      estimatedDelivery: 'Within 3–5 Business Days',
-      trackingNumber: 'LH-EXP-' + Math.floor(100000 + Math.random() * 900000),
-      prescription: firstEyeglassRx ? {
-        hasPrescription: true,
-        rightEye: {
-          sph: firstEyeglassRx.od?.sph || '0.00',
-          cyl: firstEyeglassRx.od?.cyl || '0.00',
-          axis: firstEyeglassRx.od?.axis || '-'
-        },
-        leftEye: {
-          sph: firstEyeglassRx.os?.sph || '0.00',
-          cyl: firstEyeglassRx.os?.cyl || '0.00',
-          axis: firstEyeglassRx.os?.axis || '-'
-        },
-        pd: firstEyeglassRx.pd ? `${firstEyeglassRx.pd} mm` : '63 mm',
-        lensPackage: orderData.items?.find((i) => i.configuration?.lensSelection?.lensName)?.configuration?.lensSelection?.lensName || 'Optical Lab Custom Lens'
-      } : {
-        hasPrescription: false
-      }
-    };
-
-    setOrders((prev) => [newOrder, ...prev]);
-
-    try {
-      const existing = localStorage.getItem('thelenshut_orders');
-      const parsed = existing ? JSON.parse(existing) : [];
-      localStorage.setItem('thelenshut_orders', JSON.stringify([newOrder, ...parsed]));
-    } catch {
-      // ignore
-    }
-
-    return newOrder;
+    throw new Error(apiResponse?.message || 'Failed to place order on server.');
   };
 
   return <AuthContext.Provider value={{
