@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingBag, Zap, AlertCircle, Check, ArrowRight } from 'lucide-react';
+import { ShoppingBag, Zap, AlertCircle } from 'lucide-react';
 import { EyeglassesConfigurator } from './EyeglassesConfigurator';
 import { ContactLensConfigurator } from './ContactLensConfigurator';
 import { SunglassesConfigurator } from './SunglassesConfigurator';
@@ -17,7 +17,7 @@ export const ProductConfigurationEngine = ({
   onVariantChange
 }) => {
   const navigate = useNavigate();
-  const { addToCart, setIsCartDrawerOpen } = useCart();
+  const { addToCart } = useCart();
   const pType = product.productType || 'eyeglasses';
 
   // 1. Initial State Setup
@@ -67,17 +67,18 @@ export const ProductConfigurationEngine = ({
 
   const [quantity, setQuantity] = useState(initialQuantity);
   const [validationErrors, setValidationErrors] = useState([]);
-  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
 
   // Sync variant changes to parent for perspective images
   useEffect(() => {
-    if (configuration.variantId && onVariantChange) {
-      const activeVariant = product.variants?.find((v) => v.id === configuration.variantId);
+    if (onVariantChange) {
+      const activeVariant =
+        product.variants?.find((v) => v.id === configuration.variantId) ||
+        product.variants?.[0];
       if (activeVariant) {
         onVariantChange(activeVariant);
       }
     }
-  }, [configuration.variantId]);
+  }, [configuration.variantId, product.variants, onVariantChange]);
 
   // 2. Pricing Breakdown
   const pricingBreakdown = useMemo(() => {
@@ -98,8 +99,6 @@ export const ProductConfigurationEngine = ({
       quantity,
       pricing: pricingBreakdown
     });
-
-    setIsSuccessModalOpen(true);
   };
 
   // 4. Buy Now Handler
@@ -241,47 +240,6 @@ export const ProductConfigurationEngine = ({
           <span>Buy Now</span>
         </button>
       </div>
-
-      {/* Added to Cart Feedback Dialog */}
-      {isSuccessModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 text-center space-y-4">
-            <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
-              <Check size={24} />
-            </div>
-
-            <div className="space-y-1">
-              <h3 className="text-base font-extrabold text-[#14232E]">
-                Configured Eyewear Added to Bag
-              </h3>
-              <p className="text-xs text-slate-500">
-                {product.name} with your custom optical configuration is safely stored in your shopping cart.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setIsSuccessModalOpen(false)}
-                className="py-2.5 px-4 rounded-xl border border-slate-300 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                Continue Shopping
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsSuccessModalOpen(false);
-                  setIsCartDrawerOpen(true);
-                }}
-                className="py-2.5 px-4 rounded-xl bg-[#E4232C] hover:bg-[#C81921] text-xs font-bold text-white transition-colors cursor-pointer flex items-center justify-center gap-1.5"
-              >
-                <span>View Bag</span>
-                <ArrowRight size={14} />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

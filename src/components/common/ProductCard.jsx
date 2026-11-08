@@ -1,17 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Check, Star } from 'lucide-react';
-import { useWishlist } from '../../context/WishlistContext';
+import { ShoppingBag, Check, Star } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 export const ProductCard = ({
   product,
   onQuickView,
   layout = 'grid'
 }) => {
-  const {
-    isInWishlist,
-    toggleWishlist
-  } = useWishlist();
   const {
     addToCart
   } = useCart();
@@ -21,9 +16,15 @@ export const ProductCard = ({
   const colors = product.colors || [];
   const [selectedColor, setSelectedColor] = useState(colors[0]?.name || '');
   const [addedJustNow, setAddedJustNow] = useState(false);
-  const currentColorObj = colors.find(c => c.name === selectedColor);
-  const displayImage = currentColorObj?.image || product.primaryImage || product.image || '';
-  const activeWishlist = product.id ? isInWishlist(product.id) : false;
+  const currentColorObj = colors.find(c => c.name === selectedColor) || colors[0];
+  const displayImage =
+    currentColorObj?.images?.front ||
+    (Array.isArray(currentColorObj?.images) ? currentColorObj?.images[0] : null) ||
+    currentColorObj?.image ||
+    product.images?.front ||
+    product.primaryImage ||
+    product.image ||
+    '';
 
   const handleAddToCart = e => {
     e.preventDefault();
@@ -36,12 +37,6 @@ export const ProductCard = ({
     });
     setAddedJustNow(true);
     setTimeout(() => setAddedJustNow(false), 1500);
-  };
-
-  const handleWishlist = e => {
-    e.preventDefault();
-    e.stopPropagation();
-    toggleWishlist(product);
   };
 
   // Badge text determination matching the screenshot
@@ -104,9 +99,6 @@ export const ProductCard = ({
           </div>
 
           <div className="flex items-center gap-2">
-            <button onClick={handleWishlist} className={`p-2 rounded-lg border transition-colors cursor-pointer ${activeWishlist ? 'bg-rose-50 text-[#E4232C] border-[#E4232C]' : 'bg-white text-slate-400 border-slate-200 hover:text-[#E4232C]'}`} title="Add to wishlist">
-              <Heart size={16} className={activeWishlist ? 'fill-[#E4232C]' : ''} />
-            </button>
             <button onClick={handleAddToCart} className="flex items-center gap-1.5 px-4 py-2 bg-[#E4232C] text-white hover:bg-[#C81921] rounded-lg text-xs font-semibold transition-colors cursor-pointer shadow-xs">
               {addedJustNow ? <Check size={14} /> : <ShoppingBag size={14} />}
               <span>{addedJustNow ? 'Added' : 'Add to Cart'}</span>
@@ -118,17 +110,12 @@ export const ProductCard = ({
 
   // Exact Grid Card Design matching screenshot
   return <div className="group relative flex flex-col bg-white border border-slate-200/80 rounded-xl overflow-hidden transition-all duration-300 hover:border-slate-300 hover:shadow-md">
-      {/* Top Image Box on #F5F6F7 with Badges & Wishlist */}
+      {/* Top Image Box on #F5F6F7 with Badges */}
       <div className="relative w-full aspect-4/3 bg-[#F5F6F7] flex items-center justify-center p-2.5 sm:p-4 overflow-hidden">
         {/* Top-Left Status Badge */}
         {badgeText && <span className="absolute top-2 left-2 sm:top-2.5 sm:left-2.5 bg-[#E4232C] text-white text-[9px] sm:text-[10px] font-extrabold px-1.5 sm:px-2 py-0.5 rounded uppercase tracking-wider z-10 shadow-2xs">
             {badgeText}
           </span>}
-
-        {/* Top-Right Wishlist Button */}
-        <button type="button" onClick={handleWishlist} aria-label={activeWishlist ? 'Remove from wishlist' : 'Add to wishlist'} className={`absolute top-2 right-2 sm:top-2.5 sm:right-2.5 z-10 p-1 sm:p-1.5 rounded-full transition-all duration-200 cursor-pointer ${activeWishlist ? 'bg-white text-[#E4232C] shadow-xs' : 'bg-white/80 text-slate-400 hover:text-[#E4232C] hover:bg-white shadow-2xs'}`}>
-          <Heart size={14} className={activeWishlist ? 'fill-[#E4232C] text-[#E4232C]' : 'text-slate-500'} />
-        </button>
 
         {/* Product Visual */}
         <Link to={`/product/${product.slug || ''}`} className="w-full h-full flex items-center justify-center">

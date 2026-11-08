@@ -105,30 +105,56 @@ export const Shop = ({
         if (!matchesSearch) return false;
       }
 
-      // Category
-      if (filters.category !== 'all' && p.category !== filters.category) {
-        return false;
+      // Category (case/slug/type tolerant matching)
+      if (filters.category && filters.category !== 'all' && filters.category !== 'All') {
+        const catFilter = filters.category.toLowerCase().trim();
+        const pCat = (p.category || '').toLowerCase().trim();
+        const pSlug = (p.categorySlug || '').toLowerCase().trim();
+        const pType = (p.productType || '').toLowerCase().trim();
+
+        const matchesCat =
+          pCat === catFilter ||
+          pSlug === catFilter ||
+          pType === catFilter ||
+          (catFilter === 'eyeglasses' && (pCat.includes('eyeglass') || pType === 'eyeglasses')) ||
+          (catFilter === 'sunglasses' && (pCat.includes('sunglass') || pType === 'sunglasses')) ||
+          ((catFilter === 'contact-lenses' || catFilter === 'contact-lens') && (pCat.includes('contact') || pType === 'contact-lens')) ||
+          (catFilter === 'accessories' && (pCat.includes('accessor') || pType === 'accessories'));
+
+        if (!matchesCat) return false;
       }
 
       // Gender
-      if (filters.gender !== 'All' && p.gender !== filters.gender && p.gender !== 'Unisex') {
-        return false;
+      if (filters.gender && filters.gender !== 'All' && filters.gender !== 'all') {
+        const gFilter = filters.gender.toLowerCase();
+        const pGender = (p.gender || '').toLowerCase();
+        if (pGender !== gFilter && pGender !== 'unisex' && pGender !== 'all') {
+          return false;
+        }
       }
 
-      // Brand
-      if (filters.brand?.length > 0 && !filters.brand.includes(p.material)) {
-        return false;
+      // Brand / Material (supports material filters from sidebar and brand queries)
+      if (filters.brand?.length > 0) {
+        const pMat = (p.material || '').toLowerCase();
+        const pBrand = (p.brand || '').toLowerCase();
+        const matchesBrandOrMat = filters.brand.some((b) => {
+          const bl = b.toLowerCase();
+          return pMat.includes(bl) || pBrand.includes(bl);
+        });
+        if (!matchesBrandOrMat) return false;
       }
 
       // Frame Shape
-      if (filters.frameShape?.length > 0 && !filters.frameShape.includes(p.frameShape)) {
-        return false;
+      if (filters.frameShape?.length > 0) {
+        const pShape = (p.frameShape || '').toLowerCase();
+        const matchesShape = filters.frameShape.some((s) => pShape.includes(s.toLowerCase()));
+        if (!matchesShape) return false;
       }
 
       // Color
       if (filters.color?.length > 0) {
         const matchCol = p.colors?.some((c) =>
-          filters.color.some((fc) => c.name.toLowerCase().includes(fc.toLowerCase()))
+          filters.color.some((fc) => c.name?.toLowerCase().includes(fc.toLowerCase()))
         );
         if (!matchCol) return false;
       }
@@ -141,7 +167,7 @@ export const Shop = ({
       if (sortBy === 'newest') return (b.isNew ? 1 : 0) - (a.isNew ? 1 : 0);
       return 0; // popularity / featured default
     });
-  }, [filters, sortBy, searchFilter]);
+  }, [products, filters, sortBy, searchFilter]);
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1;
   const paginatedProducts = useMemo(() => {

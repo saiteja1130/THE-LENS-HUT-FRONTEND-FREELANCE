@@ -1,8 +1,7 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { X, Heart, ShoppingBag, Compass, LogOut } from 'lucide-react';
+import { X, ShoppingBag, Compass, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { useWishlist } from '../../context/WishlistContext';
 import { useCart } from '../../context/CartContext';
 export const MobileMenu = ({
   isOpen,
@@ -13,9 +12,6 @@ export const MobileMenu = ({
     isAuthenticated,
     logout
   } = useAuth();
-  const {
-    wishlistCount
-  } = useWishlist();
   const {
     cartCount,
     setIsCartDrawerOpen
@@ -110,15 +106,11 @@ export const MobileMenu = ({
 
           {/* Bottom actions */}
           <div className="p-5 border-t border-slate-100 space-y-3 bg-slate-50">
-            <div className="grid grid-cols-2 gap-2">
-              <button onClick={() => handleNav('/wishlist')} className="flex items-center justify-center gap-1.5 py-2 px-3 bg-white border border-slate-200 rounded text-xs font-semibold text-[#14232E]">
-                <Heart size={14} className="text-[#E4232C]" />
-                <span>Wishlist ({wishlistCount})</span>
-              </button>
+            <div>
               <button onClick={() => {
               onClose();
               setIsCartDrawerOpen(true);
-            }} className="flex items-center justify-center gap-1.5 py-2 px-3 bg-white border border-slate-200 rounded text-xs font-semibold text-[#14232E]">
+            }} className="w-full flex items-center justify-center gap-1.5 py-2 px-3 bg-white border border-slate-200 rounded text-xs font-semibold text-[#14232E] hover:border-slate-300">
                 <ShoppingBag size={14} className="text-[#14232E]" />
                 <span>Cart ({cartCount})</span>
               </button>

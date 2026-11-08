@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   User as UserIcon,
   Package,
-  Heart,
   Settings,
   LogOut,
   Edit2,
@@ -22,7 +21,6 @@ import {
   ChevronUp
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { useWishlist } from '../context/WishlistContext';
 import { useNotification } from '../context/NotificationContext';
 
 export const Account = () => {
@@ -33,7 +31,6 @@ export const Account = () => {
     updateProfile
   } = useAuth();
 
-  const { wishlist, toggleWishlist, isInWishlist } = useWishlist();
   const { toast, showConfirm } = useNotification();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -87,19 +84,6 @@ export const Account = () => {
 
   // Real user orders
   const displayOrders = orders && orders.length > 0 ? orders : [];
-
-  // Actual wishlist preview items from user wishlist
-  const wishlistPreviewItems = (wishlist || []).slice(0, 3).map((item) => ({
-    id: item.id,
-    name: item.name,
-    category: item.category,
-    slug: item.slug,
-    price: item.price,
-    mrp: item.mrp,
-    discountPercent: item.discountPercent,
-    image: item.images?.front || item.primaryImage || item.image || '',
-    isFav: true,
-  }));
 
   if (!user) {
     return (
@@ -190,7 +174,6 @@ export const Account = () => {
                 { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={17} /> },
                 { id: 'profile', label: 'Profile Information', icon: <UserIcon size={17} /> },
                 { id: 'orders', label: 'My Orders', icon: <Package size={17} /> },
-                { id: 'wishlist', label: 'Wishlist', icon: <Heart size={17} />, badge: wishlist?.length > 0 ? wishlist.length : undefined },
                 { id: 'settings', label: 'Account Settings', icon: <Settings size={17} /> }
               ].map((item) => {
                 const isActive = activeTab === item.id;
@@ -198,13 +181,7 @@ export const Account = () => {
                   <button
                     key={item.id}
                     type="button"
-                    onClick={() => {
-                      if (item.id === 'wishlist') {
-                        navigate('/wishlist');
-                      } else {
-                        setTab(item.id);
-                      }
-                    }}
+                    onClick={() => setTab(item.id)}
                     className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${isActive
                       ? 'bg-rose-50 text-[#E4232C] font-bold'
                       : 'text-slate-600 hover:bg-slate-50 hover:text-[#14232E]'
@@ -216,11 +193,6 @@ export const Account = () => {
                       </span>
                       <span>{item.label}</span>
                     </div>
-                    {item.badge !== undefined && (
-                      <span className="w-5 h-5 rounded-full bg-[#E4232C] text-white text-[10px] font-bold flex items-center justify-center">
-                        {item.badge}
-                      </span>
-                    )}
                   </button>
                 );
               })}
@@ -579,183 +551,75 @@ export const Account = () => {
                   )}
                 </div>
 
-                {/* 3. Bottom Row: 2-Cards Grid (Wishlist Preview & Quick Links) */}
-                <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                  {/* Left: Wishlist Preview Card (lg:col-span-8) */}
-                  <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs">
-                    <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-                      <div className="flex items-center gap-2">
-                        <Heart size={16} className="text-slate-500" />
-                        <h2 className="text-base font-bold text-[#14232E]">
-                          Wishlist
-                        </h2>
+                {/* 3. Bottom Row: Quick Links */}
+                <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs">
+                  <h2 className="text-base font-bold text-[#14232E] pb-4 border-b border-slate-100 mb-5">
+                    Quick Links
+                  </h2>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                    {/* Shipping Policy */}
+                    <Link
+                      to="/terms"
+                      className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/50 group cursor-pointer transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0 group-hover:bg-rose-50 group-hover:text-[#E4232C] transition-colors">
+                          <Package size={17} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-[#14232E] group-hover:text-[#E4232C] transition-colors">
+                            Shipping Policy
+                          </h4>
+                          <p className="text-[11px] text-slate-400">
+                            Delivery charges & time
+                          </p>
+                        </div>
                       </div>
-                      <Link
-                        to="/wishlist"
-                        className="text-xs font-bold text-slate-500 hover:text-[#E4232C] flex items-center gap-1 transition-colors"
-                      >
-                        <span>View All</span>
-                        <ArrowRight size={13} className="text-[#E4232C]" />
-                      </Link>
-                    </div>
+                      <ChevronRight size={15} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
+                    </Link>
 
-                    {/* Products Grid */}
-                    {wishlistPreviewItems.length === 0 ? (
-                      <div className="py-8 text-center text-xs text-slate-400">
-                        Your wishlist is currently empty.
+                    {/* Return Policy */}
+                    <Link
+                      to="/returns-policy"
+                      className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/50 group cursor-pointer transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0 group-hover:bg-rose-50 group-hover:text-[#E4232C] transition-colors">
+                          <RotateCcw size={17} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-[#14232E] group-hover:text-[#E4232C] transition-colors">
+                            Return Policy
+                          </h4>
+                          <p className="text-[11px] text-slate-400">
+                            Easy returns within 7 days
+                          </p>
+                        </div>
                       </div>
-                    ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                        {wishlistPreviewItems.map((prod) => (
-                          <div
-                            key={prod.id}
-                            className="bg-white border border-slate-100 rounded-xl overflow-hidden hover:border-slate-300 hover:shadow-2xs transition-all flex flex-col justify-between"
-                          >
-                            <div className="relative aspect-4/3 bg-[#F8F9FA] p-3 flex items-center justify-center">
-                              {/* Discount badge */}
-                              {prod.discountPercent > 0 && (
-                                <span className="absolute top-2 left-2 bg-[#E4232C] text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded uppercase">
-                                  {prod.discountPercent}% OFF
-                                </span>
-                              )}
+                      <ChevronRight size={15} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
+                    </Link>
 
-                              {/* Heart indicator */}
-                              <button
-                                type="button"
-                                className="absolute top-2 right-2 p-1 text-slate-400 hover:text-[#E4232C]"
-                              >
-                                <Heart
-                                  size={14}
-                                  className={prod.isFav ? 'fill-[#E4232C] text-[#E4232C]' : ''}
-                                />
-                              </button>
-
-                              <Link to={`/product/${prod.slug}`} className="w-full h-full flex items-center justify-center">
-                                <img
-                                  src={prod.image}
-                                  alt={prod.name}
-                                  className="w-full h-full object-contain mix-blend-multiply hover:scale-105 transition-transform"
-                                />
-                              </Link>
-                            </div>
-
-                            <div className="p-3 space-y-1">
-                              <Link to={`/product/${prod.slug}`}>
-                                <h4 className="text-xs font-bold text-[#14232E] hover:text-[#E4232C] line-clamp-1">
-                                  {prod.name}
-                                </h4>
-                              </Link>
-                              <p className="text-[10px] text-slate-400 capitalize">
-                                {prod.category}
-                              </p>
-                              <div className="flex items-baseline gap-1.5 pt-1">
-                                <span className="text-xs font-bold text-[#14232E] tabular-nums">
-                                  ₹{prod.price.toLocaleString('en-IN')}
-                                </span>
-                                {prod.mrp > prod.price && (
-                                  <span className="text-[10px] text-slate-400 line-through tabular-nums">
-                                    ₹{prod.mrp.toLocaleString('en-IN')}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                    {/* Help Center */}
+                    <Link
+                      to="/faqs"
+                      className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/50 group cursor-pointer transition-all"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0 group-hover:bg-rose-50 group-hover:text-[#E4232C] transition-colors">
+                          <Headphones size={17} />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-[#14232E] group-hover:text-[#E4232C] transition-colors">
+                            Help Center
+                          </h4>
+                          <p className="text-[11px] text-slate-400">
+                            Get instant support
+                          </p>
+                        </div>
                       </div>
-                    )}
-                  </div>
-
-                  {/* Right: Quick Links Card (lg:col-span-4) */}
-                  <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs">
-                    <h2 className="text-base font-bold text-[#14232E] pb-4 border-b border-slate-100 mb-4">
-                      Quick Links
-                    </h2>
-
-                    <div className="space-y-4 text-xs">
-                      {/* Track Your Order */}
-                      <Link
-                        to="/track-order"
-                        className="flex items-center justify-between group cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0 group-hover:bg-rose-50 group-hover:text-[#E4232C] transition-colors">
-                            <Truck size={17} />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-[#14232E] group-hover:text-[#E4232C] transition-colors">
-                              Track Your Order
-                            </h4>
-                            <p className="text-[11px] text-slate-400">
-                              Check your order status
-                            </p>
-                          </div>
-                        </div>
-                        <ChevronRight size={15} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-
-                      {/* Shipping Policy */}
-                      <Link
-                        to="/terms"
-                        className="flex items-center justify-between group cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0 group-hover:bg-rose-50 group-hover:text-[#E4232C] transition-colors">
-                            <Package size={17} />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-[#14232E] group-hover:text-[#E4232C] transition-colors">
-                              Shipping Policy
-                            </h4>
-                            <p className="text-[11px] text-slate-400">
-                              Know about shipping charges & time
-                            </p>
-                          </div>
-                        </div>
-                        <ChevronRight size={15} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-
-                      {/* Return Policy */}
-                      <Link
-                        to="/returns-policy"
-                        className="flex items-center justify-between group cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0 group-hover:bg-rose-50 group-hover:text-[#E4232C] transition-colors">
-                            <RotateCcw size={17} />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-[#14232E] group-hover:text-[#E4232C] transition-colors">
-                              Return Policy
-                            </h4>
-                            <p className="text-[11px] text-slate-400">
-                              Easy returns within 7 days
-                            </p>
-                          </div>
-                        </div>
-                        <ChevronRight size={15} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-
-                      {/* Help Center */}
-                      <Link
-                        to="/faqs"
-                        className="flex items-center justify-between group cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0 group-hover:bg-rose-50 group-hover:text-[#E4232C] transition-colors">
-                            <Headphones size={17} />
-                          </div>
-                          <div>
-                            <h4 className="font-bold text-[#14232E] group-hover:text-[#E4232C] transition-colors">
-                              Help Center
-                            </h4>
-                            <p className="text-[11px] text-slate-400">
-                              Get instant support
-                            </p>
-                          </div>
-                        </div>
-                        <ChevronRight size={15} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
-                      </Link>
-                    </div>
+                      <ChevronRight size={15} className="text-slate-400 group-hover:translate-x-1 transition-transform" />
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -767,7 +631,7 @@ export const Account = () => {
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                   <div>
                     <h2 className="text-lg font-bold text-[#14232E]">
-                      All Orders & Tracking
+                      All Orders
                     </h2>
                     <p className="text-xs text-slate-500">
                       Real-time status updates and order lifecycle
@@ -844,7 +708,7 @@ export const Account = () => {
                                 onClick={() => setExpandedOrderId(isExpanded ? null : orderId)}
                                 className="text-xs text-[#E4232C] font-bold flex items-center gap-1 ml-2 cursor-pointer"
                               >
-                                <span>{isExpanded ? 'Hide Details' : 'View Details & Track'}</span>
+                                <span>{isExpanded ? 'Hide Details' : 'View Details'}</span>
                                 {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                               </button>
                             </div>
@@ -905,12 +769,28 @@ export const Account = () => {
                                       {order.prescription.lensPackage || 'Optical Lab Custom Lens'}
                                     </span>
                                   </div>
-                                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600 pt-1">
-                                    <div><strong>Right (OD) Sph:</strong> {order.prescription.rightEye?.sph || '0.00'}</div>
-                                    <div><strong>Right Cyl:</strong> {order.prescription.rightEye?.cyl || '0.00'}</div>
-                                    <div><strong>Left (OS) Sph:</strong> {order.prescription.leftEye?.sph || '0.00'}</div>
-                                    <div><strong>Left Cyl:</strong> {order.prescription.leftEye?.cyl || '0.00'}</div>
-                                  </div>
+                                  {order.prescription.fileUrl ? (
+                                    <div className="flex items-center justify-between pt-1 text-[11px]">
+                                      <div className="text-slate-700 truncate max-w-[200px] sm:max-w-xs">
+                                        <strong>Document:</strong> {order.prescription.fileName || 'Prescription Document'}
+                                      </div>
+                                      <a
+                                        href={order.prescription.fileUrl}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="font-bold text-[#E4232C] hover:underline shrink-0 ml-2"
+                                      >
+                                        View / Download Document →
+                                      </a>
+                                    </div>
+                                  ) : (
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px] text-slate-600 pt-1">
+                                      <div><strong>Right (OD) Sph:</strong> {order.prescription.rightEye?.sph || '0.00'}</div>
+                                      <div><strong>Right Cyl:</strong> {order.prescription.rightEye?.cyl || '0.00'}</div>
+                                      <div><strong>Left (OS) Sph:</strong> {order.prescription.leftEye?.sph || '0.00'}</div>
+                                      <div><strong>Left Cyl:</strong> {order.prescription.leftEye?.cyl || '0.00'}</div>
+                                    </div>
+                                  )}
                                 </div>
                               )}
 

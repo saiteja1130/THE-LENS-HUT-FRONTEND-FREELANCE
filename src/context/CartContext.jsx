@@ -249,7 +249,6 @@ export const CartProvider = ({ children }) => {
     }
 
     toast.success(`Added ${product.name} (${selectedColor}) to your shopping bag`);
-    setIsCartDrawerOpen(true);
   };
 
   /**

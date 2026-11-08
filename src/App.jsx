@@ -1,7 +1,6 @@
 import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { CartProvider } from './context/CartContext';
-import { WishlistProvider } from './context/WishlistContext';
 import { AuthProvider } from './context/AuthContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { Header } from './components/layout/Header';
@@ -18,7 +17,6 @@ import { Sunglasses } from './pages/Sunglasses';
 import { ContactLenses } from './pages/ContactLenses';
 import { Accessories } from './pages/Accessories';
 import { ProductDetail } from './pages/ProductDetail';
-import { Wishlist } from './pages/Wishlist';
 import { Cart } from './pages/Cart';
 import { Checkout } from './pages/Checkout';
 import { Account } from './pages/Account';
@@ -54,12 +52,11 @@ export default function App() {
   return <BrowserRouter>
       <NotificationProvider>
         <AuthProvider>
-          <WishlistProvider>
-            <CartProvider>
-              <ScrollToTop />
-              <div className="flex flex-col min-h-screen bg-white text-[#2B2F33] selection:bg-[#E4232C]/10 selection:text-[#E4232C]">
-                {/* Global Navigation Header */}
-                <Header />
+          <CartProvider>
+            <ScrollToTop />
+            <div className="flex flex-col min-h-screen bg-white text-[#2B2F33] selection:bg-[#E4232C]/10 selection:text-[#E4232C]">
+              {/* Global Navigation Header */}
+              <Header />
 
               {/* Page Route Router */}
               <main className="flex-1">
@@ -71,7 +68,6 @@ export default function App() {
                   <Route path="/contact-lenses" element={<ContactLenses />} />
                   <Route path="/accessories" element={<Accessories />} />
                   <Route path="/product/:productSlug" element={<ProductDetail />} />
-                  <Route path="/wishlist" element={<Wishlist />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />
                   
@@ -118,8 +114,7 @@ export default function App() {
               <Footer />
             </div>
           </CartProvider>
-        </WishlistProvider>
-      </AuthProvider>
-    </NotificationProvider>
-  </BrowserRouter>;
+        </AuthProvider>
+      </NotificationProvider>
+    </BrowserRouter>;
 }

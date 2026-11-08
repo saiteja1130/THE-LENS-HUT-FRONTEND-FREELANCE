@@ -39,7 +39,7 @@ export function validateConfiguration(product, configuration) {
         errors.push('Please choose a prescription method (Enter Manually or Upload).');
       } else if (rxMethod === 'upload') {
         if (!configuration.prescription?.fileId && !configuration.prescription?.fileName && !configuration.prescription?.fileUrl) {
-          errors.push('Please upload your prescription document (JPG, PNG, or PDF).');
+          errors.push('Please upload your prescription document (.docx, .pdf, or image).');
         }
       } else if (rxMethod === 'manual') {
         const od = configuration.prescription?.od || {};

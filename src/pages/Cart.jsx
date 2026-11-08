@@ -52,8 +52,23 @@ export const Cart = () => {
           )}
           {lt !== 'frame-only' && rx && (
             <div className="text-slate-500 font-mono text-[10px]">
-              {rx.method === 'upload' ? (
-                <span className="text-emerald-700 font-bold">✓ Doctor Rx Uploaded</span>
+              {rx.method === 'upload' || rx.fileUrl ? (
+                <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
+                  <span>✓ Doctor Rx:</span>
+                  {rx.fileUrl ? (
+                    <a
+                      href={rx.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="underline text-emerald-800 hover:text-emerald-950 truncate max-w-[200px]"
+                      title={rx.fileName || 'View Prescription'}
+                    >
+                      {rx.fileName || 'Prescription Doc'}
+                    </a>
+                  ) : (
+                    <span>{rx.fileName || 'Uploaded'}</span>
+                  )}
+                </div>
               ) : (
                 <span>
                   OD: {rx.od?.sph || '0.00'} / {rx.od?.cyl || '0.00'} · OS: {rx.os?.sph || '0.00'} / {rx.os?.cyl || '0.00'}
@@ -78,7 +93,22 @@ export const Cart = () => {
             {cl.prescriptionMethod === 'post-checkout' ? (
               <span className="text-amber-700 font-semibold">Powers to be confirmed post-checkout</span>
             ) : cl.prescriptionMethod === 'upload' ? (
-              <span className="text-emerald-700 font-bold">✓ Contact Lens Rx Uploaded</span>
+              <div className="flex items-center gap-1.5 text-emerald-700 font-bold">
+                <span>✓ Contact Lens Rx:</span>
+                {cl.prescriptionFile?.fileUrl ? (
+                  <a
+                    href={cl.prescriptionFile.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline text-emerald-800 hover:text-emerald-950 truncate max-w-[200px]"
+                    title={cl.prescriptionFile.fileName || 'View Prescription'}
+                  >
+                    {cl.prescriptionFile.fileName || 'Document'}
+                  </a>
+                ) : (
+                  <span>{cl.prescriptionFile?.fileName || 'Uploaded'}</span>
+                )}
+              </div>
             ) : (
               <span>
                 OD: <strong>{cl.od?.sph || 'Plano'}</strong>{cl.od?.cyl && ` (CYL ${cl.od?.cyl} ${cl.od?.axis})`} · OS: <strong>{cl.os?.sph || 'Plano'}</strong>{cl.os?.cyl && ` (CYL ${cl.os?.cyl} ${cl.os?.axis})`}

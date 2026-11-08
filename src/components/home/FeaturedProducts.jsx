@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Star, Heart } from 'lucide-react';
-import { useWishlist } from '../../context/WishlistContext';
+import { ArrowRight, Star } from 'lucide-react';
 import { productApi } from '../../services/productApi';
 
 export const FeaturedProducts = () => {
-  const { isInWishlist, toggleWishlist } = useWishlist();
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -70,13 +68,12 @@ export const FeaturedProducts = () => {
         {/* 5 Product Cards Grid matching the screenshot */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
           {products.map((item) => {
-            const activeWishlist = isInWishlist(item.id);
             return (
               <div
                 key={item.id}
                 className="group relative flex flex-col bg-white border border-slate-200/80 rounded-2xl overflow-hidden transition-all duration-300 hover:border-slate-300 hover:shadow-md"
               >
-                {/* Top Image Box on #F8F9FA with Badges & Wishlist */}
+                {/* Top Image Box on #F8F9FA with Badges */}
                 <div className="relative w-full aspect-4/3 bg-[#F8F9FA] flex items-center justify-center p-2 sm:p-4 overflow-hidden">
                   {/* Top-Left Status Badge */}
                   {item.discountPercent > 0 && (
@@ -84,25 +81,6 @@ export const FeaturedProducts = () => {
                       {item.discountPercent}% OFF
                     </span>
                   )}
-
-                  {/* Top-Right Wishlist Button */}
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toggleWishlist(item);
-                    }}
-                    aria-label={activeWishlist ? 'Remove from wishlist' : 'Add to wishlist'}
-                    className={`absolute top-2.5 right-2.5 z-10 p-1.5 rounded-full transition-all duration-200 cursor-pointer ${activeWishlist
-                      ? 'bg-white text-[#E4232C] shadow-xs'
-                      : 'bg-white/80 text-slate-400 hover:text-[#E4232C] hover:bg-white shadow-2xs'
-                      }`}
-                  >
-                    <Heart
-                      size={15}
-                      className={activeWishlist ? 'fill-[#E4232C] text-[#E4232C]' : 'text-slate-500'}
-                    />
-                  </button>
 
                   {/* Product Visual */}
                   <Link to={`/product/${item.slug}`} className="w-full h-full flex items-center justify-center">

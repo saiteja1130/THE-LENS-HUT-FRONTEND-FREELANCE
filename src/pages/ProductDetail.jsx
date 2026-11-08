@@ -1,7 +1,6 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import {
-  Heart,
   ShieldCheck,
   Truck,
   RotateCcw,
@@ -16,7 +15,6 @@ import { normalizeProduct } from '../services/opticalEngine/productNormalizer';
 import { ProductConfigurationEngine } from '../components/product/ProductConfigurationEngine';
 import { ProductCard } from '../components/common/ProductCard';
 import { useCart } from '../context/CartContext';
-import { useWishlist } from '../context/WishlistContext';
 
 export const ProductDetail = () => {
   const { productSlug } = useParams();
@@ -27,7 +25,6 @@ export const ProductDetail = () => {
   const [relatedProducts, setRelatedProducts] = useState([]);
 
   const { cart } = useCart();
-  const { isInWishlist, toggleWishlist } = useWishlist();
 
   useEffect(() => {
     let isMounted = true;
@@ -83,7 +80,48 @@ export const ProductDetail = () => {
     return [...new Set(imgs.filter(Boolean))];
   }, [product, activeVariantImages]);
 
-  const isWish = product ? isInWishlist(product.id) : false;
+  const handleVariantChange = useCallback(
+    (variant) => {
+      if (!variant) return;
+
+      let imgs = [];
+      if (Array.isArray(variant.perspectiveList) && variant.perspectiveList.length > 0) {
+        imgs = variant.perspectiveList;
+      } else if (Array.isArray(variant.imageList) && variant.imageList.length > 0) {
+        imgs = variant.imageList;
+      } else if (Array.isArray(variant.images) && variant.images.length > 0) {
+        imgs = variant.images;
+      } else if (variant.images && typeof variant.images === 'object') {
+        if (variant.images.front) imgs.push(variant.images.front);
+        if (variant.images.side) imgs.push(variant.images.side);
+        if (variant.images.angle) imgs.push(variant.images.angle);
+      }
+      if (imgs.length === 0 && variant.image) {
+        imgs.push(variant.image);
+      }
+
+      // Fallback: look up in product.colors by colorName
+      if (imgs.length === 0 && variant.colorName && product?.colors?.length > 0) {
+        const matchedCol = product.colors.find(
+          (c) => c.name?.toLowerCase() === variant.colorName.toLowerCase()
+        );
+        if (matchedCol?.images) {
+          if (matchedCol.images.front) imgs.push(matchedCol.images.front);
+          if (matchedCol.images.side) imgs.push(matchedCol.images.side);
+          if (matchedCol.images.angle) imgs.push(matchedCol.images.angle);
+        } else if (matchedCol?.image) {
+          imgs.push(matchedCol.image);
+        }
+      }
+
+      imgs = imgs.filter(Boolean);
+      if (imgs.length > 0) {
+        setActiveVariantImages([...new Set(imgs)]);
+        setActiveThumb(0);
+      }
+    },
+    [product]
+  );
 
   if (isLoading) {
     return (
@@ -148,20 +186,6 @@ export const ProductDetail = () => {
                     {product.discountPercent}% OFF
                   </span>
                 )}
-
-                {/* Wishlist Button */}
-                <button
-                  type="button"
-                  onClick={() => toggleWishlist(product)}
-                  className={`absolute top-3.5 right-3.5 sm:top-4 sm:right-4 z-10 p-2 rounded-full transition-all cursor-pointer ${
-                    isWish
-                      ? 'bg-white text-[#E4232C] shadow-xs'
-                      : 'bg-white text-slate-400 hover:text-[#E4232C] shadow-2xs'
-                  }`}
-                  aria-label="Wishlist"
-                >
-                  <Heart size={18} className={isWish ? 'fill-[#E4232C] text-[#E4232C]' : ''} />
-                </button>
 
                 {/* Left Arrow */}
                 {perspectiveImages.length > 1 && (
@@ -376,22 +400,7 @@ export const ProductDetail = () => {
               product={product}
               initialConfiguration={editCartItem?.configuration}
               initialQuantity={editCartItem?.quantity || 1}
-              onVariantChange={(variant) => {
-                if (variant) {
-                  const imgs = [];
-                  if (variant.images && typeof variant.images === 'object' && !Array.isArray(variant.images)) {
-                    if (variant.images.front) imgs.push(variant.images.front);
-                    if (variant.images.side) imgs.push(variant.images.side);
-                    if (variant.images.angle) imgs.push(variant.images.angle);
-                  } else if (variant.image) {
-                    imgs.push(variant.image);
-                  }
-                  if (imgs.length > 0) {
-                    setActiveVariantImages([...new Set(imgs)]);
-                    setActiveThumb(0);
-                  }
-                }
-              }}
+              onVariantChange={handleVariantChange}
             />
 
             {/* Service Trust Highlights */}

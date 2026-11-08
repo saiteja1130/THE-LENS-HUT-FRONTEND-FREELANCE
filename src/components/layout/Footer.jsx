@@ -46,9 +46,6 @@ export const Footer = () => {
                   <Link to="/contact-us" className="hover:text-white transition-colors">Contact Us</Link>
                 </li>
                 <li>
-                  <Link to="/wishlist" className="hover:text-white transition-colors">Wishlist</Link>
-                </li>
-                <li>
                   <Link to="/cart" className="hover:text-white transition-colors">Cart</Link>
                 </li>
                 <li>

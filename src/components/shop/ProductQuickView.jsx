@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Heart, ShoppingBag, Check, ShieldCheck, Truck } from 'lucide-react';
+import { ShoppingBag, Check, ShieldCheck, Truck } from 'lucide-react';
 import { Modal } from '../common/Modal';
 import { QuantitySelector } from '../common/QuantitySelector';
 import { useCart } from '../../context/CartContext';
-import { useWishlist } from '../../context/WishlistContext';
 export const ProductQuickView = ({
   product,
   isOpen,
@@ -13,17 +12,19 @@ export const ProductQuickView = ({
   const {
     addToCart
   } = useCart();
-  const {
-    isInWishlist,
-    toggleWishlist
-  } = useWishlist();
   const [selectedColor, setSelectedColor] = useState(product.colors[0]?.name || '');
   const [selectedSize, setSelectedSize] = useState(product.size);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
-  const activeColorObj = product.colors.find(c => c.name === selectedColor);
-  const currentImage = activeColorObj?.image || product.primaryImage;
-  const isWish = isInWishlist(product.id);
+  const activeColorObj = product.colors.find(c => c.name === selectedColor) || product.colors[0];
+  const currentImage =
+    activeColorObj?.images?.front ||
+    (Array.isArray(activeColorObj?.images) ? activeColorObj?.images[0] : null) ||
+    activeColorObj?.image ||
+    product.images?.front ||
+    product.primaryImage ||
+    product.image ||
+    '';
   const handleAdd = () => {
     addToCart(product, {
       color: selectedColor,
@@ -92,13 +93,9 @@ export const ProductQuickView = ({
             </div>
 
             <div className="flex items-center gap-3">
-              <button onClick={handleAdd} className="flex-1 flex items-center justify-center gap-2 py-2.5 px-4 bg-[#E4232C] hover:bg-[#C81921] text-white rounded-md text-sm font-semibold transition-colors cursor-pointer shadow-sm">
+              <button onClick={handleAdd} className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-[#E4232C] hover:bg-[#C81921] text-white rounded-md text-sm font-semibold transition-colors cursor-pointer shadow-sm">
                 {added ? <Check size={16} /> : <ShoppingBag size={16} />}
                 <span>{added ? 'Added to Cart' : 'Add to Cart'}</span>
-              </button>
-
-              <button onClick={() => toggleWishlist(product)} className={`p-2.5 rounded-md border transition-colors cursor-pointer ${isWish ? 'bg-rose-50 text-[#E4232C] border-[#E4232C]' : 'bg-white text-slate-500 border-slate-200 hover:text-[#E4232C]'}`} title="Wishlist">
-                <Heart size={18} className={isWish ? 'fill-[#E4232C]' : ''} />
               </button>
             </div>
 

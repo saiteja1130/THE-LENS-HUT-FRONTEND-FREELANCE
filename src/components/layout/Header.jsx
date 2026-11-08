@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
-import { Search, Heart, ShoppingBag, User as UserIcon, Menu, X, ChevronDown, LogOut, Package } from 'lucide-react';
+import { Search, ShoppingBag, User as UserIcon, Menu, X, ChevronDown, LogOut, Package } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useCart } from '../../context/CartContext';
-import { useWishlist } from '../../context/WishlistContext';
 import { productApi } from '../../services/productApi';
 import { AnnouncementBar } from './AnnouncementBar';
 import { MobileMenu } from './MobileMenu';
@@ -18,9 +17,6 @@ export const Header = () => {
     cartCount,
     setIsCartDrawerOpen
   } = useCart();
-  const {
-    wishlistCount
-  } = useWishlist();
   const navigate = useNavigate();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -229,10 +225,6 @@ export const Header = () => {
                         <Package size={14} className="text-slate-400" />
                         <span>My Orders</span>
                       </Link>
-                      <Link to="/wishlist" onClick={() => setIsAccountMenuOpen(false)} className="flex items-center gap-2.5 px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 hover:text-[#14232E]">
-                        <Heart size={14} className="text-slate-400" />
-                        <span>Wishlist ({wishlistCount})</span>
-                      </Link>
                       <div className="border-t border-slate-100 my-1" />
                       <button onClick={() => {
                   logout();
@@ -255,20 +247,14 @@ export const Header = () => {
                 </div>}
             </div>
 
-            {/* Wishlist Link */}
-            <Link to="/wishlist" className="relative p-1.5 sm:p-2 text-slate-700 hover:text-[#E4232C] hover:bg-slate-50 rounded-full transition-colors cursor-pointer" title="Wishlist" aria-label={`Wishlist with ${wishlistCount} items`}>
-              <Heart size={19} strokeWidth={1.8} />
-              <span className="absolute top-0 right-0 sm:top-0.5 sm:right-0.5 w-4 h-4 rounded-full bg-[#E4232C] text-white text-[10px] font-bold flex items-center justify-center tabular-nums shadow-xs">
-                {wishlistCount > 0 ? wishlistCount : 2}
-              </span>
-            </Link>
-
             {/* Cart Trigger */}
             <button onClick={() => setIsCartDrawerOpen(true)} className="relative p-1.5 sm:p-2 text-slate-700 hover:text-[#E4232C] hover:bg-slate-50 rounded-full transition-colors cursor-pointer" title="View Cart" aria-label={`Cart with ${cartCount} items`}>
               <ShoppingBag size={19} strokeWidth={1.8} />
-              <span className="absolute top-0 right-0 sm:top-0.5 sm:right-0.5 w-4 h-4 rounded-full bg-[#E4232C] text-white text-[10px] font-bold flex items-center justify-center tabular-nums shadow-xs">
-                {cartCount > 0 ? cartCount : 1}
-              </span>
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 sm:top-0.5 sm:right-0.5 w-4 h-4 rounded-full bg-[#E4232C] text-white text-[10px] font-bold flex items-center justify-center tabular-nums shadow-xs">
+                  {cartCount}
+                </span>
+              )}
             </button>
           </div>
         </div>

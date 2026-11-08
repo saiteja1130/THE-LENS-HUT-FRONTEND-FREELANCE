@@ -46,7 +46,6 @@ export const normalizeFrontendProduct = (p) => {
     isNew: Boolean(p.isNewArrival || p.isNew),
     inStock: p.stock !== undefined ? p.stock > 0 : true,
     stock: p.stock !== undefined ? p.stock : 0,
-    isInWishlist: Boolean(p.isInWishlist),
   };
 };
 

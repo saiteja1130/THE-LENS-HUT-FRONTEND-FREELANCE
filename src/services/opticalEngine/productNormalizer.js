@@ -88,6 +88,33 @@ export function normalizeProduct(product) {
         isDefault: true
       }];
     }
+  } else {
+    // If variants were already provided, enrich them so imageList and perspectiveList are always populated
+    variants = variants.map((v) => {
+      const perspectiveList =
+        v.perspectiveList ||
+        (v.images && typeof v.images === 'object' && !Array.isArray(v.images)
+          ? [v.images.front, v.images.side, v.images.angle].filter(Boolean)
+          : Array.isArray(v.images)
+          ? v.images.filter(Boolean)
+          : v.image
+          ? [v.image]
+          : []);
+      const frontImg =
+        v.image ||
+        v.images?.front ||
+        (Array.isArray(v.images) ? v.images[0] : null) ||
+        perspectiveList[0] ||
+        product.primaryImage;
+      const allImages = perspectiveList.length > 0 ? perspectiveList : (frontImg ? [frontImg] : []);
+      return {
+        ...v,
+        id: v.id || v._id || `var-${product.id}-${(v.colorName || 'variant').toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
+        image: frontImg,
+        perspectiveList: allImages,
+        imageList: allImages,
+      };
+    });
   }
 
   // 1. Eyeglasses Configuration

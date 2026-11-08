@@ -61,8 +61,8 @@ export const ConfigurationSummary = ({
                 <div className="flex items-center justify-between">
                   <span className="text-slate-500">Prescription:</span>
                   <span className="font-semibold text-slate-800">
-                    {configuration.prescription?.method === 'upload'
-                      ? 'Doctor Rx Document Uploaded'
+                    {configuration.prescription?.method === 'upload' || configuration.prescription?.fileUrl
+                      ? `Doctor Rx: ${configuration.prescription.fileName || 'Document Uploaded'}`
                       : configuration.prescription?.method === 'manual'
                       ? `Manual (OD: ${configuration.prescription.od?.sph || '0.00'} · OS: ${configuration.prescription.os?.sph || '0.00'}${configuration.prescription.pd ? ` · PD: ${configuration.prescription.pd}mm` : ''})`
                       : 'None'}

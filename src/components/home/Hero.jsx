@@ -70,16 +70,18 @@ export const Hero = () => {
   const current = slides[activeSlide] || slides[0];
 
   return (
-    <section className="relative w-full bg-[#FAF8F5] overflow-hidden min-h-[580px] sm:min-h-[520px] flex items-end sm:items-center">
-      {/* Full-Bleed Background Image with top-aligned positioning */}
-      <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden z-0">
+    <section className="relative w-full bg-[#FAF8F5] overflow-hidden min-h-[580px] sm:min-h-[520px] lg:min-h-[560px] flex items-end sm:items-center">
+      {/* Right-Aligned Image Container with smooth left feather */}
+      <div className="absolute right-0 top-0 bottom-0 w-full sm:w-[60%] lg:w-[52%] h-full pointer-events-none overflow-hidden z-0">
         <img
           src={current.image}
           alt={current.titleLine1 || 'Hero banner visual'}
-          className="w-full h-full object-cover object-[82%_top] sm:object-[84%_top] lg:object-[86%_top] transition-all duration-700"
+          className="w-full h-full object-cover object-[84%_top] sm:object-[82%_30%] lg:object-[84%_35%] transition-all duration-700"
         />
-        {/* Subtle diagonal linear shade */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-[#FAF8F5] from-10% via-[#FAF8F5]/50 via-35% to-transparent sm:bg-gradient-to-r sm:from-[#FAF8F5] sm:from-20% sm:via-[#FAF8F5]/80 sm:via-60% sm:to-transparent w-full md:w-[70%] lg:w-[62%]" />
+        {/* Smooth horizontal gradient dissolve into section background on desktop */}
+        <div className="hidden sm:block absolute inset-0 bg-gradient-to-r from-[#FAF8F5] via-[#FAF8F5]/60 via-20% to-transparent to-55% pointer-events-none" />
+        {/* Mobile vertical gradient: ZERO overlay on the face (transparent from 48% up so face is 100% crisp and clear) */}
+        <div className="sm:hidden absolute inset-0 bg-gradient-to-t from-[#FAF8F5] from-0% via-[#FAF8F5] via-38% to-transparent to-48% pointer-events-none" />
       </div>
 
       {/* Foreground Content Container */}
@@ -125,16 +127,16 @@ export const Hero = () => {
         </div>
       </div>
 
-      {/* Pagination Controls */}
+      {/* Pagination Controls - Styled as a floating frosted glass capsule */}
       {slides.length > 1 && (
-        <div className="absolute bottom-5 right-5 sm:bottom-8 sm:right-12 z-20 flex items-center gap-4 sm:gap-6 select-none">
-          <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm font-bold">
+        <div className="absolute bottom-5 right-5 sm:bottom-7 sm:right-8 lg:right-12 z-20 flex items-center gap-3 sm:gap-4 px-4 py-2 sm:py-2.5 rounded-full bg-white/85 backdrop-blur-md shadow-md border border-white/70 select-none">
+          <div className="flex items-center gap-2 sm:gap-2.5 text-xs sm:text-sm font-bold">
             {slides.map((_, idx) => (
               <React.Fragment key={idx}>
-                {idx > 0 && <span className="text-slate-400 font-normal mx-0.5">/</span>}
+                {idx > 0 && <span className="text-slate-300 font-normal mx-0.5">/</span>}
                 <button
                   onClick={() => setActiveSlide(idx)}
-                  className={`cursor-pointer transition-all relative pb-1 ${
+                  className={`cursor-pointer transition-all relative pb-0.5 ${
                     activeSlide === idx
                       ? 'text-[#E4232C]'
                       : 'text-slate-500 hover:text-slate-800'
@@ -149,20 +151,22 @@ export const Hero = () => {
             ))}
           </div>
 
-          <button
-            onClick={() => setActiveSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1))}
-            className="p-1 hover:text-[#E4232C] transition-colors cursor-pointer text-slate-700"
-            aria-label="Previous slide"
-          >
-            <ArrowLeft size={16} />
-          </button>
-          <button
-            onClick={() => setActiveSlide((prev) => (prev + 1) % slides.length)}
-            className="p-1 hover:text-[#E4232C] transition-colors cursor-pointer text-slate-700"
-            aria-label="Next slide"
-          >
-            <ArrowRight size={16} />
-          </button>
+          <div className="flex items-center gap-1 border-l border-slate-200 pl-2.5">
+            <button
+              onClick={() => setActiveSlide((prev) => (prev === 0 ? slides.length - 1 : prev - 1))}
+              className="p-1 hover:text-[#E4232C] transition-colors cursor-pointer text-slate-600 hover:bg-slate-100/60 rounded"
+              aria-label="Previous slide"
+            >
+              <ArrowLeft size={15} />
+            </button>
+            <button
+              onClick={() => setActiveSlide((prev) => (prev + 1) % slides.length)}
+              className="p-1 hover:text-[#E4232C] transition-colors cursor-pointer text-slate-600 hover:bg-slate-100/60 rounded"
+              aria-label="Next slide"
+            >
+              <ArrowRight size={15} />
+            </button>
+          </div>
         </div>
       )}
     </section>

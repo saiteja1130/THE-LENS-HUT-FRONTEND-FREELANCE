@@ -21,12 +21,12 @@ export const PromoBanners = () => {
               <div className="absolute inset-0 bg-gradient-to-r from-[#F7EFEB] via-[#F7EFEB]/50 to-transparent" />
             </div>
 
-            {/* Circular Discount Badge at Top Right */}
+            {/* Circular Discount Badge at Top Right
             <div className="absolute top-4 right-4 sm:top-6 sm:right-6 w-14 h-14 sm:w-18 sm:h-18 rounded-full bg-[#E4232C] text-white flex flex-col items-center justify-center text-center shadow-lg z-20 select-none">
               <span className="text-[8px] sm:text-[9px] font-bold tracking-wider leading-none">UP TO</span>
               <span className="text-sm sm:text-lg font-black leading-none my-0.5">50%</span>
               <span className="text-[8px] sm:text-[9px] font-bold tracking-wider leading-none">OFF</span>
-            </div>
+            </div> */}
 
             {/* Content Column */}
             <div className="space-y-2.5 sm:space-y-3 z-10 max-w-[240px] sm:max-w-xs">

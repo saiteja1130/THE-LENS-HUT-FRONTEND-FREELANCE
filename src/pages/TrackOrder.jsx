@@ -17,6 +17,7 @@ import {
   FileText,
   AlertCircle,
   Sparkles,
+  ExternalLink,
 } from 'lucide-react';
 import { orderApi } from '../services/orderApi';
 import { useNotification } from '../context/NotificationContext';
@@ -125,10 +126,10 @@ export const TrackOrder = () => {
         <div className="text-center max-w-2xl mx-auto space-y-3">
           <div className="inline-flex items-center gap-2 px-3 py-1 bg-rose-50 text-[#E4232C] rounded-full text-xs font-bold uppercase tracking-wider">
             <Truck size={14} />
-            <span>Real-Time Order & Optical Tracking</span>
+            <span>Real-Time Order Status</span>
           </div>
           <h1 className="text-2xl sm:text-4xl font-extrabold text-[#14232E] tracking-tight">
-            Track Your Eyewear Order
+            Eyewear Order Status
           </h1>
           <p className="text-xs sm:text-sm text-slate-500">
             Enter your Lens Hut order number (<code className="text-[#14232E] font-semibold">LH-XXXXXX</code>) or courier tracking number to inspect status and lab crafting progress.
@@ -310,34 +311,56 @@ export const TrackOrder = () => {
                   </span>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead>
-                      <tr className="text-slate-400 border-b border-slate-100">
-                        <th className="pb-2 font-semibold">Eye</th>
-                        <th className="pb-2 font-semibold">Sphere (SPH)</th>
-                        <th className="pb-2 font-semibold">Cylinder (CYL)</th>
-                        <th className="pb-2 font-semibold">Axis</th>
-                        <th className="pb-2 font-semibold">Pupillary Distance (PD)</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
-                      <tr>
-                        <td className="py-2.5 font-bold text-[#14232E]">Right Eye (OD)</td>
-                        <td className="py-2.5 font-mono">{order.prescription.rightEye?.sph || '0.00'}</td>
-                        <td className="py-2.5 font-mono">{order.prescription.rightEye?.cyl || '0.00'}</td>
-                        <td className="py-2.5 font-mono">{order.prescription.rightEye?.axis || '-'}</td>
-                        <td className="py-2.5" rowSpan={2}>{order.prescription.pd ? `${order.prescription.pd} mm` : '-'}</td>
-                      </tr>
-                      <tr>
-                        <td className="py-2.5 font-bold text-[#14232E]">Left Eye (OS)</td>
-                        <td className="py-2.5 font-mono">{order.prescription.leftEye?.sph || '0.00'}</td>
-                        <td className="py-2.5 font-mono">{order.prescription.leftEye?.cyl || '0.00'}</td>
-                        <td className="py-2.5 font-mono">{order.prescription.leftEye?.axis || '-'}</td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
+                {order.prescription.fileUrl && (
+                  <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <FileText size={16} className="text-[#E4232C] shrink-0" />
+                      <span className="font-bold text-[#14232E] truncate max-w-[240px] sm:max-w-md">
+                        {order.prescription.fileName || 'Uploaded Prescription Document'}
+                      </span>
+                    </div>
+                    <a
+                      href={order.prescription.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#E4232C] hover:underline font-bold inline-flex items-center gap-1 shrink-0 ml-3"
+                    >
+                      <span>Download / View</span>
+                      <ExternalLink size={12} />
+                    </a>
+                  </div>
+                )}
+
+                {order.prescription.method !== 'upload' && (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-xs text-left">
+                      <thead>
+                        <tr className="text-slate-400 border-b border-slate-100">
+                          <th className="pb-2 font-semibold">Eye</th>
+                          <th className="pb-2 font-semibold">Sphere (SPH)</th>
+                          <th className="pb-2 font-semibold">Cylinder (CYL)</th>
+                          <th className="pb-2 font-semibold">Axis</th>
+                          <th className="pb-2 font-semibold">Pupillary Distance (PD)</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                        <tr>
+                          <td className="py-2.5 font-bold text-[#14232E]">Right Eye (OD)</td>
+                          <td className="py-2.5 font-mono">{order.prescription.rightEye?.sph || '0.00'}</td>
+                          <td className="py-2.5 font-mono">{order.prescription.rightEye?.cyl || '0.00'}</td>
+                          <td className="py-2.5 font-mono">{order.prescription.rightEye?.axis || '-'}</td>
+                          <td className="py-2.5" rowSpan={2}>{order.prescription.pd ? `${order.prescription.pd} mm` : '-'}</td>
+                        </tr>
+                        <tr>
+                          <td className="py-2.5 font-bold text-[#14232E]">Left Eye (OS)</td>
+                          <td className="py-2.5 font-mono">{order.prescription.leftEye?.sph || '0.00'}</td>
+                          <td className="py-2.5 font-mono">{order.prescription.leftEye?.cyl || '0.00'}</td>
+                          <td className="py-2.5 font-mono">{order.prescription.leftEye?.axis || '-'}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
 
