@@ -11,14 +11,14 @@ import {
   Phone,
   Calendar,
   Camera,
-  Truck,
   RotateCcw,
   Headphones,
   ChevronRight,
   ArrowRight,
-  CheckCircle2,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Shield,
+  Clock
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
@@ -50,6 +50,15 @@ export const Account = () => {
   const [editEmail, setEditEmail] = useState(user?.email || '');
   const [profileSaved, setProfileSaved] = useState(false);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
+
+  // Keep state in sync if user changes
+  useEffect(() => {
+    if (user) {
+      setEditName(user.name || '');
+      setEditPhone(user.phone || '');
+      setEditEmail(user.email || '');
+    }
+  }, [user]);
 
   const setTab = (tab) => {
     setSearchParams({ tab });
@@ -87,38 +96,59 @@ export const Account = () => {
 
   if (!user) {
     return (
-      <div className="py-20 text-center max-w-md mx-auto space-y-4">
-        <h2 className="text-xl font-bold text-[#14232E]">Sign in to access your account</h2>
-        <Link to="/login" className="inline-block px-5 py-2.5 bg-[#E4232C] text-white rounded text-xs font-semibold">
+      <div className="py-24 text-center max-w-md mx-auto px-4 space-y-4">
+        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto text-slate-400">
+          <UserIcon size={28} />
+        </div>
+        <h2 className="text-2xl font-extrabold text-[#14232E] tracking-tight">
+          Sign in to access your account
+        </h2>
+        <p className="text-xs sm:text-sm text-slate-500">
+          Please log in to manage your orders, prescription details, and personal preferences.
+        </p>
+        <Link
+          to="/login"
+          className="inline-flex items-center justify-center px-6 py-2.5 bg-[#E4232C] hover:bg-[#C81921] text-white rounded-full text-xs sm:text-sm font-bold shadow-sm transition-all"
+        >
           Login to Continue
         </Link>
       </div>
     );
   }
 
+  // Status badge styling helper
+  const getStatusBadge = (orderStatus) => {
+    const statusMap = {
+      Delivered: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+      Processing: 'bg-blue-50 text-blue-700 border-blue-200/80',
+      Shipped: 'bg-amber-50 text-amber-700 border-amber-200/80',
+      Cancelled: 'bg-rose-50 text-rose-700 border-rose-200/80',
+    };
+    return statusMap[orderStatus] || 'bg-slate-50 text-slate-600 border-slate-200/80';
+  };
+
   return (
-    <div className="bg-[#FFFFFF] min-h-screen">
-      {/* 1. Hero Banner matching exact screenshot with /images/wishlist/wishlist-hero.png */}
-      <section className="relative w-full bg-[#FAF8F5] overflow-hidden min-h-[200px] sm:min-h-[300px]  flex items-center">
-        {/* Full-Bleed Background Image on Right with top alignment to prevent cropping */}
+    <div className="bg-[#F8F9FA] min-h-screen">
+      {/* 1. Refined Hero Header Banner */}
+      <section className="relative w-full bg-[#FAF8F5] border-b border-slate-200/70 overflow-hidden min-h-[200px] sm:min-h-[250px] flex items-center">
+        {/* Full-Bleed Background Image on Right with soft gradient blend */}
         <div className="absolute inset-0 w-full h-full pointer-events-none overflow-hidden z-0">
           <img
             src="/images/checkout-hero.png"
-            alt="Our collection banner"
-            className="w-full h-full object-cover object-[82%_center] sm:object-[86%_center] lg:object-[88%_center] transition-all duration-500"
+            alt="The Lens Hut Account"
+            className="w-full h-full object-cover object-[82%_center] sm:object-[86%_center] lg:object-[88%_center] opacity-80"
           />
-          {/* Smooth gradient blend for crisp text readability on the left */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#FAF8F5] via-[#FAF8F5]/90 sm:via-[#FAF8F5]/75 to-transparent w-full md:w-[62%]" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FAF8F5] via-[#FAF8F5]/95 sm:via-[#FAF8F5]/80 to-transparent w-full md:w-[65%]" />
         </div>
 
         {/* Foreground Content */}
-        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
+        <div className="relative z-10 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
           {/* Breadcrumbs */}
-          <nav className="flex items-center gap-2 text-xs text-slate-500 mb-2.5 font-medium">
+          <nav className="flex items-center gap-2 text-xs text-slate-500 mb-2 font-medium">
             <Link to="/" className="hover:text-[#E4232C] transition-colors">
               Home
             </Link>
-            <span className="text-slate-400">›</span>
+            <span className="text-slate-300">/</span>
             <span className="text-[#E4232C] font-semibold">My Account</span>
           </nav>
 
@@ -126,28 +156,29 @@ export const Account = () => {
           <h1 className="text-3xl sm:text-4xl font-extrabold text-[#14232E] tracking-tight">
             My Account
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500 mt-1.5 font-normal">
-            Manage your profile, orders, and more.
+          <p className="text-xs sm:text-sm text-slate-500 mt-1 font-normal">
+            Manage your personal profile, active orders, and optical preferences.
           </p>
         </div>
 
-        {/* Slogan with stylish cursive typography & underline placed at top-right clear of model's face */}
+        {/* Brand Slogan */}
         <div className="hidden xl:block absolute top-7 right-8 lg:right-14 z-10 pointer-events-none select-none text-right">
-          <span className="font-serif italic text-slate-800 text-xl lg:text-2xl font-bold tracking-tight -rotate-3 block leading-tight drop-shadow-xs">
+          <span className="font-serif italic text-slate-800 text-xl lg:text-2xl font-bold tracking-tight -rotate-2 block leading-tight drop-shadow-xs">
             Better Vision,<br />Brighter Tomorrow.
           </span>
-          <div className="w-16 h-1 bg-[#E4232C] rounded-full mt-1.5 ml-auto -rotate-2"></div>
+          <div className="w-16 h-1 bg-[#E4232C] rounded-full mt-1.5 ml-auto -rotate-1"></div>
         </div>
       </section>
 
-      {/* 2. Main 2-Column Dashboard Layout */}
+      {/* 2. Main Dashboard Layout */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
+          
           {/* Left Sidebar Navigation Card */}
-          <aside className="lg:col-span-3 bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
+          <aside className="lg:col-span-3 bg-white rounded-2xl border border-slate-200/80 p-5 shadow-xs space-y-5">
             {/* User Profile Mini Header */}
-            <div className="flex flex-col items-center text-center pb-4 border-b border-slate-100">
-              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-100 shadow-xs mb-2.5 flex items-center justify-center bg-slate-100">
+            <div className="flex flex-col items-center text-center pb-5 border-b border-slate-100">
+              <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-slate-100 shadow-xs mb-3 flex items-center justify-center bg-[#F8F9FA] text-[#14232E]">
                 {user?.avatar ? (
                   <img
                     src={user.avatar}
@@ -155,15 +186,15 @@ export const Account = () => {
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <span className="text-xl font-bold text-[#14232E]">
+                  <span className="text-xl font-extrabold text-[#14232E]">
                     {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                   </span>
                 )}
               </div>
-              <h3 className="text-base font-bold text-[#14232E]">
+              <h3 className="text-base font-bold text-[#14232E] line-clamp-1">
                 {user?.name || 'My Account'}
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5 line-clamp-1">
                 {user?.email || ''}
               </p>
             </div>
@@ -171,10 +202,10 @@ export const Account = () => {
             {/* Menu Items */}
             <nav className="space-y-1">
               {[
-                { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={17} /> },
-                { id: 'profile', label: 'Profile Information', icon: <UserIcon size={17} /> },
-                { id: 'orders', label: 'My Orders', icon: <Package size={17} /> },
-                { id: 'settings', label: 'Account Settings', icon: <Settings size={17} /> }
+                { id: 'dashboard', label: 'Dashboard', icon: <LayoutDashboard size={16} /> },
+                { id: 'profile', label: 'Profile Information', icon: <UserIcon size={16} /> },
+                { id: 'orders', label: 'My Orders', icon: <Package size={16} /> },
+                { id: 'settings', label: 'Account Settings', icon: <Settings size={16} /> }
               ].map((item) => {
                 const isActive = activeTab === item.id;
                 return (
@@ -182,10 +213,11 @@ export const Account = () => {
                     key={item.id}
                     type="button"
                     onClick={() => setTab(item.id)}
-                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all cursor-pointer ${isActive
-                      ? 'bg-rose-50 text-[#E4232C] font-bold'
-                      : 'text-slate-600 hover:bg-slate-50 hover:text-[#14232E]'
-                      }`}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer ${
+                      isActive
+                        ? 'bg-rose-50/80 text-[#E4232C] font-bold border-l-2 border-[#E4232C]'
+                        : 'text-slate-600 hover:bg-slate-50 hover:text-[#14232E]'
+                    }`}
                   >
                     <div className="flex items-center gap-3">
                       <span className={isActive ? 'text-[#E4232C]' : 'text-slate-400'}>
@@ -193,6 +225,7 @@ export const Account = () => {
                       </span>
                       <span>{item.label}</span>
                     </div>
+                    {isActive && <ChevronRight size={14} className="text-[#E4232C]" />}
                   </button>
                 );
               })}
@@ -201,9 +234,9 @@ export const Account = () => {
                 <button
                   type="button"
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-rose-600 hover:bg-rose-50/50 transition-colors cursor-pointer"
+                  className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-slate-500 hover:text-[#E4232C] hover:bg-rose-50/60 transition-colors cursor-pointer"
                 >
-                  <LogOut size={17} />
+                  <LogOut size={16} />
                   <span>Logout</span>
                 </button>
               </div>
@@ -212,22 +245,29 @@ export const Account = () => {
 
           {/* Right Main Content Area */}
           <main className="lg:col-span-9 space-y-6">
-            {/* TAB: DASHBOARD (Exact Replica of Screenshot) */}
+            
+            {/* TAB 1: DASHBOARD */}
             {activeTab === 'dashboard' && (
               <div className="space-y-6">
+                
                 {/* 1. Profile Information Card */}
-                <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs">
+                <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs">
                   <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-5">
-                    <h2 className="text-base font-bold text-[#14232E]">
-                      Profile Information
-                    </h2>
+                    <div>
+                      <h2 className="text-base sm:text-lg font-bold text-[#14232E]">
+                        Profile Information
+                      </h2>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Your registered details and contact information
+                      </p>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setIsEditingProfile(!isEditingProfile)}
-                      className="text-xs font-bold text-slate-600 hover:text-[#E4232C] transition-colors flex items-center gap-1.5 cursor-pointer"
+                      className="text-xs font-bold text-slate-600 hover:text-[#E4232C] transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200/80 hover:border-slate-300 cursor-pointer shadow-2xs"
                     >
-                      <Edit2 size={13} />
-                      <span>{isEditingProfile ? 'Cancel' : 'Edit'}</span>
+                      <Edit2 size={12} />
+                      <span>{isEditingProfile ? 'Cancel' : 'Edit Profile'}</span>
                     </button>
                   </div>
 
@@ -235,34 +275,34 @@ export const Account = () => {
                     <form onSubmit={handleSaveProfile} className="space-y-4">
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                          <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                             Full Name
                           </label>
                           <input
                             type="text"
                             value={editName}
                             onChange={(e) => setEditName(e.target.value)}
-                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
+                            className="w-full h-10 px-3.5 border border-slate-200 rounded-xl text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E] focus:ring-1 focus:ring-[#14232E] transition-all"
                             required
                           />
                         </div>
                         <div>
-                          <label className="block text-[11px] font-semibold text-slate-500 mb-1">
+                          <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                             Phone Number
                           </label>
                           <input
                             type="text"
                             value={editPhone}
                             onChange={(e) => setEditPhone(e.target.value)}
-                            className="w-full px-3 py-2 border border-slate-300 rounded-lg text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
+                            className="w-full h-10 px-3.5 border border-slate-200 rounded-xl text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E] focus:ring-1 focus:ring-[#14232E] transition-all"
                             required
                           />
                         </div>
                       </div>
-                      <div className="flex justify-end pt-1">
+                      <div className="flex justify-end pt-2">
                         <button
                           type="submit"
-                          className="px-5 py-2 bg-[#E4232C] hover:bg-[#C81921] text-white text-xs font-bold rounded-lg transition-colors cursor-pointer"
+                          className="px-6 py-2.5 bg-[#E4232C] hover:bg-[#C81921] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
                         >
                           Save Changes
                         </button>
@@ -272,7 +312,7 @@ export const Account = () => {
                     <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
                       {/* Avatar with Camera badge */}
                       <div className="relative shrink-0">
-                        <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-slate-100 shadow-xs flex items-center justify-center bg-slate-100">
+                        <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-slate-100 shadow-xs flex items-center justify-center bg-[#F8F9FA]">
                           {user?.avatar ? (
                             <img
                               src={user.avatar}
@@ -280,7 +320,7 @@ export const Account = () => {
                               className="w-full h-full object-cover"
                             />
                           ) : (
-                            <span className="text-2xl font-bold text-[#14232E]">
+                            <span className="text-2xl font-extrabold text-[#14232E]">
                               {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                             </span>
                           )}
@@ -295,62 +335,62 @@ export const Account = () => {
                       </div>
 
                       {/* 4 Details in 2x2 Grid */}
-                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8 w-full">
+                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4 w-full">
                         {/* Full Name */}
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center shrink-0">
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-[#F8F9FA] border border-slate-100">
+                          <div className="w-9 h-9 rounded-lg bg-white text-slate-500 border border-slate-200/60 flex items-center justify-center shrink-0 shadow-2xs">
                             <UserIcon size={16} />
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <span className="text-[11px] text-slate-400 block font-medium">
                               Full Name
                             </span>
-                            <span className="text-xs sm:text-sm font-bold text-[#14232E]">
+                            <span className="text-xs sm:text-sm font-bold text-[#14232E] truncate block">
                               {user?.name || 'Not provided'}
                             </span>
                           </div>
                         </div>
 
                         {/* Phone Number */}
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center shrink-0">
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-[#F8F9FA] border border-slate-100">
+                          <div className="w-9 h-9 rounded-lg bg-white text-slate-500 border border-slate-200/60 flex items-center justify-center shrink-0 shadow-2xs">
                             <Phone size={16} />
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <span className="text-[11px] text-slate-400 block font-medium">
                               Phone Number
                             </span>
-                            <span className="text-xs sm:text-sm font-bold text-[#14232E]">
+                            <span className="text-xs sm:text-sm font-bold text-[#14232E] truncate block">
                               {user?.phone || 'Not provided'}
                             </span>
                           </div>
                         </div>
 
                         {/* Email Address */}
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center shrink-0">
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-[#F8F9FA] border border-slate-100">
+                          <div className="w-9 h-9 rounded-lg bg-white text-slate-500 border border-slate-200/60 flex items-center justify-center shrink-0 shadow-2xs">
                             <Mail size={16} />
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <span className="text-[11px] text-slate-400 block font-medium">
                               Email Address
                             </span>
-                            <span className="text-xs sm:text-sm font-bold text-[#14232E]">
+                            <span className="text-xs sm:text-sm font-bold text-[#14232E] truncate block">
                               {user?.email || 'Not provided'}
                             </span>
                           </div>
                         </div>
 
                         {/* Member Since */}
-                        <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center shrink-0">
+                        <div className="flex items-center gap-3 p-3 rounded-xl bg-[#F8F9FA] border border-slate-100">
+                          <div className="w-9 h-9 rounded-lg bg-white text-slate-500 border border-slate-200/60 flex items-center justify-center shrink-0 shadow-2xs">
                             <Calendar size={16} />
                           </div>
-                          <div>
+                          <div className="min-w-0">
                             <span className="text-[11px] text-slate-400 block font-medium">
                               Member Since
                             </span>
-                            <span className="text-xs sm:text-sm font-bold text-[#14232E]">
+                            <span className="text-xs sm:text-sm font-bold text-[#14232E] truncate block">
                               {user?.joinedDate || (user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Member')}
                             </span>
                           </div>
@@ -361,11 +401,16 @@ export const Account = () => {
                 </div>
 
                 {/* 2. Recent Orders Card */}
-                <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs">
+                <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs">
                   <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
-                    <h2 className="text-base font-bold text-[#14232E]">
-                      Recent Orders
-                    </h2>
+                    <div>
+                      <h2 className="text-base sm:text-lg font-bold text-[#14232E]">
+                        Recent Orders
+                      </h2>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Your latest eyewear purchases and fulfillment status
+                      </p>
+                    </div>
                     <button
                       type="button"
                       onClick={() => setTab('orders')}
@@ -377,15 +422,20 @@ export const Account = () => {
                   </div>
 
                   {displayOrders.length === 0 ? (
-                    <div className="py-8 text-center text-slate-500 space-y-2">
-                      <Package className="w-10 h-10 text-slate-300 mx-auto" />
-                      <p className="text-xs font-semibold text-slate-700">No orders placed yet</p>
-                      <p className="text-[11px] text-slate-400">Your recent orders will appear here after checkout.</p>
+                    <div className="py-10 text-center text-slate-500 space-y-2.5">
+                      <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
+                        <Package size={24} />
+                      </div>
+                      <p className="text-xs sm:text-sm font-bold text-[#14232E]">No orders placed yet</p>
+                      <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                        Your recent eyewear purchases will appear here after checkout with instant tracking.
+                      </p>
                       <Link
                         to="/eyeglasses"
-                        className="inline-block mt-2 text-xs font-bold text-[#E4232C] hover:underline"
+                        className="inline-flex items-center gap-1.5 mt-2 text-xs font-bold text-[#E4232C] hover:underline"
                       >
-                        Explore Eyewear Catalog →
+                        <span>Explore Eyewear Catalog</span>
+                        <span>→</span>
                       </Link>
                     </div>
                   ) : (
@@ -407,26 +457,17 @@ export const Account = () => {
 
                           const itemCount = order.itemCountText || `${order.items?.length || 1} item${order.items?.length > 1 ? 's' : ''}`;
 
-                          const statusStyles = {
-                            Delivered: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
-                            Processing: 'bg-blue-50 text-blue-700 border border-blue-100',
-                            Shipped: 'bg-amber-50 text-amber-700 border border-amber-100',
-                            Cancelled: 'bg-rose-50 text-rose-700 border border-rose-100',
-                          };
-
                           return (
                             <div
                               key={orderId}
-                              className="p-3.5 bg-slate-50/70 border border-slate-100 rounded-xl space-y-2.5"
+                              className="p-3.5 bg-[#F8F9FA] border border-slate-200/70 rounded-xl space-y-2.5"
                             >
                               <div className="flex items-center justify-between">
-                                <span className="font-bold text-xs text-[#14232E]">
+                                <span className="font-extrabold text-xs text-[#14232E]">
                                   {orderId}
                                 </span>
                                 <span
-                                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                    statusStyles[orderStatus] || 'bg-slate-100 text-slate-600'
-                                  }`}
+                                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(orderStatus)}`}
                                 >
                                   {orderStatus}
                                 </span>
@@ -434,7 +475,7 @@ export const Account = () => {
 
                               <div className="flex items-center justify-between text-xs pt-1">
                                 <div className="flex items-center gap-2.5">
-                                  <div className="w-9 h-8 bg-white rounded p-1 border border-slate-200 shrink-0 flex items-center justify-center">
+                                  <div className="w-10 h-9 bg-white rounded-lg p-1 border border-slate-200/80 shrink-0 flex items-center justify-center">
                                     <img
                                       src={orderImage}
                                       alt="Product"
@@ -468,7 +509,7 @@ export const Account = () => {
                       <div className="hidden md:block overflow-x-auto">
                         <table className="w-full text-left text-xs min-w-[550px]">
                           <thead>
-                            <tr className="text-[11px] font-semibold text-slate-400 border-b border-slate-100">
+                            <tr className="text-[11px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 pb-3">
                               <th className="pb-3 font-semibold">Order ID</th>
                               <th className="pb-3 font-semibold">Date</th>
                               <th className="pb-3 font-semibold">Items</th>
@@ -493,15 +534,8 @@ export const Account = () => {
 
                               const itemCount = order.itemCountText || `${order.items?.length || 1} item${order.items?.length > 1 ? 's' : ''}`;
 
-                              const statusStyles = {
-                                Delivered: 'bg-emerald-50 text-emerald-600',
-                                Processing: 'bg-blue-50 text-blue-600',
-                                Shipped: 'bg-amber-50 text-amber-600',
-                                Cancelled: 'bg-rose-50 text-rose-600',
-                              };
-
                               return (
-                                <tr key={orderId} className="hover:bg-slate-50/50 transition-colors">
+                                <tr key={orderId} className="hover:bg-slate-50/70 transition-colors">
                                   <td className="py-3.5 font-bold text-[#14232E]">
                                     {orderId}
                                   </td>
@@ -510,24 +544,22 @@ export const Account = () => {
                                   </td>
                                   <td className="py-3.5">
                                     <div className="flex items-center gap-2">
-                                      <div className="w-8 h-7 bg-[#F5F6F7] rounded p-1 flex items-center justify-center shrink-0">
+                                      <div className="w-8 h-8 bg-[#F8F9FA] rounded-md p-1 border border-slate-200/60 flex items-center justify-center shrink-0">
                                         <img
                                           src={orderImage}
                                           alt="Product"
                                           className="w-full h-full object-contain mix-blend-multiply"
                                         />
                                       </div>
-                                      <span className="text-slate-600 font-medium">{itemCount}</span>
+                                      <span className="text-slate-700 font-medium">{itemCount}</span>
                                     </div>
                                   </td>
-                                  <td className="py-3.5 font-bold text-[#14232E] tabular-nums">
+                                  <td className="py-3.5 font-extrabold text-[#14232E] tabular-nums">
                                     ₹{orderTotal.toLocaleString('en-IN')}
                                   </td>
                                   <td className="py-3.5">
                                     <span
-                                      className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                                        statusStyles[orderStatus] || 'bg-slate-100 text-slate-600'
-                                      }`}
+                                      className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${getStatusBadge(orderStatus)}`}
                                     >
                                       {orderStatus}
                                     </span>
@@ -535,7 +567,7 @@ export const Account = () => {
                                   <td className="py-3.5 text-right">
                                     <Link
                                       to={`/order/${encodeURIComponent(orderId)}`}
-                                      className="text-slate-500 hover:text-[#E4232C] font-semibold flex items-center justify-end gap-1 ml-auto cursor-pointer"
+                                      className="text-slate-600 hover:text-[#E4232C] font-semibold inline-flex items-center gap-1 cursor-pointer transition-colors"
                                     >
                                       <span>View Details</span>
                                       <ArrowRight size={12} className="text-[#E4232C]" />
@@ -552,20 +584,20 @@ export const Account = () => {
                 </div>
 
                 {/* 3. Bottom Row: Quick Links */}
-                <div className="bg-white rounded-2xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs">
-                  <h2 className="text-base font-bold text-[#14232E] pb-4 border-b border-slate-100 mb-5">
+                <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs">
+                  <h2 className="text-base sm:text-lg font-bold text-[#14232E] pb-4 border-b border-slate-100 mb-4">
                     Quick Links
                   </h2>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
                     {/* Shipping Policy */}
                     <Link
                       to="/terms"
-                      className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/50 group cursor-pointer transition-all"
+                      className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/70 group cursor-pointer transition-all"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0 group-hover:bg-rose-50 group-hover:text-[#E4232C] transition-colors">
-                          <Package size={17} />
+                        <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-600 border border-slate-200/50 flex items-center justify-center shrink-0 group-hover:bg-rose-50 group-hover:text-[#E4232C] transition-colors">
+                          <Package size={16} />
                         </div>
                         <div>
                           <h4 className="font-bold text-[#14232E] group-hover:text-[#E4232C] transition-colors">
@@ -582,11 +614,11 @@ export const Account = () => {
                     {/* Return Policy */}
                     <Link
                       to="/returns-policy"
-                      className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/50 group cursor-pointer transition-all"
+                      className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/70 group cursor-pointer transition-all"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0 group-hover:bg-rose-50 group-hover:text-[#E4232C] transition-colors">
-                          <RotateCcw size={17} />
+                        <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-600 border border-slate-200/50 flex items-center justify-center shrink-0 group-hover:bg-rose-50 group-hover:text-[#E4232C] transition-colors">
+                          <RotateCcw size={16} />
                         </div>
                         <div>
                           <h4 className="font-bold text-[#14232E] group-hover:text-[#E4232C] transition-colors">
@@ -603,11 +635,11 @@ export const Account = () => {
                     {/* Help Center */}
                     <Link
                       to="/faqs"
-                      className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/50 group cursor-pointer transition-all"
+                      className="flex items-center justify-between p-3.5 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/70 group cursor-pointer transition-all"
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-600 flex items-center justify-center shrink-0 group-hover:bg-rose-50 group-hover:text-[#E4232C] transition-colors">
-                          <Headphones size={17} />
+                        <div className="w-9 h-9 rounded-xl bg-slate-50 text-slate-600 border border-slate-200/50 flex items-center justify-center shrink-0 group-hover:bg-rose-50 group-hover:text-[#E4232C] transition-colors">
+                          <Headphones size={16} />
                         </div>
                         <div>
                           <h4 className="font-bold text-[#14232E] group-hover:text-[#E4232C] transition-colors">
@@ -622,25 +654,26 @@ export const Account = () => {
                     </Link>
                   </div>
                 </div>
+
               </div>
             )}
 
-            {/* TAB: MY ORDERS (Complete Orders Detailed View) */}
+            {/* TAB 2: MY ORDERS (Complete Orders Detailed View) */}
             {activeTab === 'orders' && (
-              <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-2xs space-y-6">
+              <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
                   <div>
-                    <h2 className="text-lg font-bold text-[#14232E]">
+                    <h2 className="text-base sm:text-lg font-bold text-[#14232E]">
                       All Orders
                     </h2>
-                    <p className="text-xs text-slate-500">
-                      Real-time status updates and order lifecycle
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Real-time status updates, prescription data, and tracking details
                     </p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setTab('dashboard')}
-                    className="text-xs font-semibold text-[#E4232C] hover:underline"
+                    className="text-xs font-semibold text-[#E4232C] hover:underline cursor-pointer"
                   >
                     ← Back to Dashboard
                   </button>
@@ -648,14 +681,16 @@ export const Account = () => {
 
                 {displayOrders.length === 0 ? (
                   <div className="py-12 text-center text-slate-500 space-y-3">
-                    <Package className="w-12 h-12 text-slate-300 mx-auto" />
+                    <div className="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center mx-auto text-slate-300">
+                      <Package size={26} />
+                    </div>
                     <h3 className="text-sm font-bold text-[#14232E]">No order history found</h3>
                     <p className="text-xs text-slate-400 max-w-sm mx-auto">
                       You haven't placed any eyewear orders yet. Start exploring our high-precision optical lenses and stylish frames!
                     </p>
                     <Link
                       to="/eyeglasses"
-                      className="inline-block mt-3 px-5 py-2.5 bg-[#14232E] text-white text-xs font-bold rounded-xl hover:bg-black transition-colors"
+                      className="inline-flex items-center justify-center px-5 py-2.5 bg-[#14232E] hover:bg-black text-white text-xs font-bold rounded-xl transition-colors shadow-xs"
                     >
                       Start Shopping
                     </Link>
@@ -672,17 +707,10 @@ export const Account = () => {
                       const courier = order.tracking?.courierName || '';
                       const estDelivery = order.estimatedDelivery || order.tracking?.estimatedDelivery || '';
 
-                      const statusStyles = {
-                        Delivered: 'bg-emerald-50 text-emerald-700 border border-emerald-100',
-                        Processing: 'bg-blue-50 text-blue-700 border border-blue-100',
-                        Shipped: 'bg-amber-50 text-amber-700 border border-amber-100',
-                        Cancelled: 'bg-rose-50 text-rose-700 border border-rose-100',
-                      };
-
                       return (
                         <div
                           key={orderId}
-                          className="border border-slate-200 rounded-xl p-4 sm:p-5 hover:border-slate-300 transition-colors space-y-4 bg-white"
+                          className="border border-slate-200/80 rounded-2xl p-4 sm:p-5 hover:border-slate-300 transition-all space-y-4 bg-white shadow-2xs"
                         >
                           <div className="flex flex-wrap items-center justify-between gap-3 text-xs border-b border-slate-100 pb-3">
                             <div className="flex items-center gap-3">
@@ -697,16 +725,14 @@ export const Account = () => {
 
                             <div className="flex items-center gap-2">
                               <span
-                                className={`text-[11px] font-bold px-3 py-1 rounded-full ${
-                                  statusStyles[orderStatus] || 'bg-slate-100 text-slate-600'
-                                }`}
+                                className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${getStatusBadge(orderStatus)}`}
                               >
                                 ● {orderStatus}
                               </span>
                               <button
                                 type="button"
                                 onClick={() => setExpandedOrderId(isExpanded ? null : orderId)}
-                                className="text-xs text-[#E4232C] font-bold flex items-center gap-1 ml-2 cursor-pointer"
+                                className="text-xs text-[#E4232C] font-bold flex items-center gap-1 ml-2 cursor-pointer hover:underline"
                               >
                                 <span>{isExpanded ? 'Hide Details' : 'View Details'}</span>
                                 {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -735,7 +761,7 @@ export const Account = () => {
                                     return (
                                       <div key={idx} className="py-2.5 flex items-center justify-between gap-3 text-xs">
                                         <div className="flex items-center gap-3">
-                                          <div className="w-12 h-10 bg-slate-50 border border-slate-200/80 rounded p-1 flex items-center justify-center shrink-0">
+                                          <div className="w-12 h-11 bg-[#F8F9FA] border border-slate-200/80 rounded-lg p-1 flex items-center justify-center shrink-0">
                                             <img
                                               src={itemImg}
                                               alt={item.name}
@@ -750,7 +776,7 @@ export const Account = () => {
                                           </div>
                                         </div>
                                         <div className="text-right">
-                                          <span className="font-bold text-[#14232E]">
+                                          <span className="font-bold text-[#14232E] tabular-nums">
                                             ₹{(itemPrice * (item.quantity || 1)).toLocaleString('en-IN')}
                                           </span>
                                         </div>
@@ -762,10 +788,10 @@ export const Account = () => {
 
                               {/* Prescription Details (if present) */}
                               {order.prescription?.hasPrescription && (
-                                <div className="bg-slate-50/80 border border-slate-200/80 rounded-xl p-3 text-xs space-y-1.5">
+                                <div className="bg-[#F8F9FA] border border-slate-200/80 rounded-xl p-3.5 text-xs space-y-2">
                                   <div className="flex items-center justify-between">
                                     <span className="font-bold text-[#14232E]">Optical Prescription Attached</span>
-                                    <span className="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">
+                                    <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full">
                                       {order.prescription.lensPackage || 'Optical Lab Custom Lens'}
                                     </span>
                                   </div>
@@ -801,7 +827,7 @@ export const Account = () => {
                                     SHIPPING ADDRESS
                                   </span>
                                   <p className="font-bold text-[#14232E]">{order.shippingAddress?.fullName}</p>
-                                  <p className="text-slate-600 text-[11px]">
+                                  <p className="text-slate-600 text-[11px] leading-relaxed">
                                     {order.shippingAddress?.street}, {order.shippingAddress?.locality ? `${order.shippingAddress.locality}, ` : ''}{order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}
                                   </p>
                                   <p className="text-slate-500 text-[11px] mt-0.5">Phone: {order.shippingAddress?.phone}</p>
@@ -813,7 +839,7 @@ export const Account = () => {
                                   <p className="font-medium text-slate-700">Courier: <strong className="text-[#14232E]">{courier || 'Pending dispatch'}</strong></p>
                                   <p className="font-medium text-slate-700">Tracking ID: <span className="font-mono text-[#14232E]">{trackingNum || 'Pending'}</span></p>
                                   {estDelivery && (
-                                    <p className="font-medium text-emerald-600 text-[11px] mt-0.5">Est. Delivery: {estDelivery}</p>
+                                    <p className="font-medium text-emerald-700 text-[11px] mt-0.5">Est. Delivery: {estDelivery}</p>
                                   )}
                                 </div>
                               </div>
@@ -823,13 +849,13 @@ export const Account = () => {
                           {/* Order Summary & Pricing */}
                           <div className="flex items-center justify-between text-xs pt-1">
                             <div className="text-slate-500">
-                              Total: <strong className="text-[#14232E] font-bold text-sm">₹{orderTotal.toLocaleString('en-IN')}</strong>
+                              Total: <strong className="text-[#14232E] font-extrabold text-sm tabular-nums">₹{orderTotal.toLocaleString('en-IN')}</strong>
                               {order.paymentMethod && <span className="text-slate-400 ml-2">({order.paymentMethod})</span>}
                             </div>
                             {trackingNum ? (
                               <Link
                                 to={`/track-order?trackingId=${encodeURIComponent(trackingNum)}`}
-                                className="text-xs font-semibold text-[#14232E] hover:text-[#E4232C] flex items-center gap-1"
+                                className="text-xs font-bold text-[#14232E] hover:text-[#E4232C] flex items-center gap-1 transition-colors"
                               >
                                 <span>Live Tracking</span>
                                 <ChevronRight size={14} />
@@ -848,17 +874,22 @@ export const Account = () => {
               </div>
             )}
 
-            {/* TAB: PROFILE DETAILS */}
+            {/* TAB 3: PROFILE DETAILS */}
             {activeTab === 'profile' && (
-              <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-2xs space-y-6">
+              <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                  <h2 className="text-lg font-bold text-[#14232E]">
-                    Profile Information
-                  </h2>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-bold text-[#14232E]">
+                      Profile Information
+                    </h2>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Update your account contact details and display name
+                    </p>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setTab('dashboard')}
-                    className="text-xs font-semibold text-[#E4232C] hover:underline"
+                    className="text-xs font-semibold text-[#E4232C] hover:underline cursor-pointer"
                   >
                     ← Back to Dashboard
                   </button>
@@ -866,89 +897,109 @@ export const Account = () => {
 
                 <form onSubmit={handleSaveProfile} className="space-y-4 max-w-lg">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                       Full Name
                     </label>
                     <input
                       type="text"
                       value={editName}
                       onChange={(e) => setEditName(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
+                      className="w-full h-11 px-4 border border-slate-200 rounded-xl text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E] focus:ring-1 focus:ring-[#14232E] transition-all"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                       Email Address
                     </label>
                     <input
                       type="email"
                       value={editEmail}
                       disabled
-                      className="w-full px-4 py-2.5 border border-slate-200 bg-slate-50 text-slate-400 rounded-xl text-xs sm:text-sm cursor-not-allowed"
+                      className="w-full h-11 px-4 border border-slate-200 bg-slate-50 text-slate-400 rounded-xl text-xs sm:text-sm cursor-not-allowed"
                     />
+                    <span className="text-[11px] text-slate-400 mt-1 block">
+                      Email address is linked to your account identity and cannot be altered directly.
+                    </span>
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                       Phone Number
                     </label>
                     <input
                       type="text"
                       value={editPhone}
                       onChange={(e) => setEditPhone(e.target.value)}
-                      className="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E]"
+                      className="w-full h-11 px-4 border border-slate-200 rounded-xl text-xs sm:text-sm text-[#14232E] focus:outline-none focus:border-[#14232E] focus:ring-1 focus:ring-[#14232E] transition-all"
                       required
                     />
                   </div>
-                  <button
-                    type="submit"
-                    className="px-6 py-2.5 bg-[#E4232C] hover:bg-[#C81921] text-white text-xs font-bold rounded-xl transition-colors cursor-pointer shadow-xs"
-                  >
-                    Save Changes
-                  </button>
-                  {profileSaved && (
-                    <span className="text-xs text-emerald-600 font-semibold ml-3">
-                      Profile updated successfully!
-                    </span>
-                  )}
+                  <div className="pt-2 flex items-center gap-3">
+                    <button
+                      type="submit"
+                      className="px-6 py-2.5 bg-[#E4232C] hover:bg-[#C81921] text-white text-xs font-bold rounded-xl transition-all shadow-xs cursor-pointer"
+                    >
+                      Save Changes
+                    </button>
+                    {profileSaved && (
+                      <span className="text-xs text-emerald-600 font-semibold">
+                        Profile updated successfully!
+                      </span>
+                    )}
+                  </div>
                 </form>
               </div>
             )}
 
-
-            {/* TAB: ACCOUNT SETTINGS */}
+            {/* TAB 4: ACCOUNT SETTINGS */}
             {activeTab === 'settings' && (
-              <div className="bg-white rounded-2xl border border-slate-200/90 p-6 shadow-2xs space-y-6">
+              <div className="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-6 shadow-xs space-y-6">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                  <h2 className="text-lg font-bold text-[#14232E]">
-                    Account Settings
-                  </h2>
+                  <div>
+                    <h2 className="text-base sm:text-lg font-bold text-[#14232E]">
+                      Account Settings
+                    </h2>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Manage authentication credentials and account preferences
+                    </p>
+                  </div>
                   <button
                     type="button"
                     onClick={() => setTab('dashboard')}
-                    className="text-xs font-semibold text-[#E4232C] hover:underline"
+                    className="text-xs font-semibold text-[#E4232C] hover:underline cursor-pointer"
                   >
                     ← Back to Dashboard
                   </button>
                 </div>
 
                 <div className="space-y-4 max-w-lg text-xs">
-                  <div className="border border-slate-200 rounded-xl p-4 space-y-3">
-                    <h3 className="font-bold text-sm text-[#14232E]">Security</h3>
-                    <p className="text-slate-500">
-                      Manage your password and active login sessions.
+                  <div className="border border-slate-200/80 rounded-2xl p-5 space-y-3 bg-[#F8F9FA]/60">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-white border border-slate-200/70 text-[#14232E] flex items-center justify-center shadow-2xs">
+                        <Shield size={16} />
+                      </div>
+                      <div>
+                        <h3 className="font-bold text-sm text-[#14232E]">Security & Credentials</h3>
+                        <p className="text-[11px] text-slate-400">Manage your password and security recovery</p>
+                      </div>
+                    </div>
+                    <p className="text-slate-600 text-xs leading-relaxed pt-1">
+                      Keep your account safe by updating your password periodically or initiating a secure reset.
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => navigate('/reset-password')}
-                      className="px-4 py-2 border border-slate-300 rounded-lg font-semibold text-[#14232E] hover:bg-slate-50 transition-colors"
-                    >
-                      Change Password
-                    </button>
+                    <div className="pt-2">
+                      <button
+                        type="button"
+                        onClick={() => navigate('/reset-password')}
+                        className="px-5 py-2.5 bg-white border border-slate-200 hover:border-slate-300 rounded-xl font-bold text-[#14232E] hover:text-[#E4232C] transition-all shadow-2xs cursor-pointer"
+                      >
+                        Change Password
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
             )}
+
           </main>
         </div>
       </div>
@@ -956,3 +1007,5 @@ export const Account = () => {
     </div>
   );
 };
+
+export default Account;

@@ -1,18 +1,13 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
-import {
-  ShieldCheck,
-  Truck,
-  RotateCcw,
-  Star,
-  ChevronLeft,
-  ChevronRight,
-  Check,
-  Ruler
-} from 'lucide-react';
+import { ChevronRight, ArrowLeft } from 'lucide-react';
 import { productApi } from '../services/productApi';
 import { normalizeProduct } from '../services/opticalEngine/productNormalizer';
+import { ProductImageGallery } from '../components/product/ProductImageGallery';
+import { ProductDetailsInfo } from '../components/product/ProductDetailsInfo';
 import { ProductConfigurationEngine } from '../components/product/ProductConfigurationEngine';
+import { ProductTabsSection } from '../components/product/ProductTabsSection';
+import { MobileStickyBar } from '../components/product/MobileStickyBar';
 import { ProductCard } from '../components/common/ProductCard';
 import { useCart } from '../context/CartContext';
 
@@ -23,6 +18,10 @@ export const ProductDetail = () => {
   const [fetchedProduct, setFetchedProduct] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [relatedProducts, setRelatedProducts] = useState([]);
+  const [activeThumb, setActiveThumb] = useState(0);
+  const [activeVariantImages, setActiveVariantImages] = useState(null);
+  const [isMobileBarVisible, setIsMobileBarVisible] = useState(false);
+  const mainPurchaseRef = useRef(null);
 
   const { cart } = useCart();
 
@@ -62,10 +61,6 @@ export const ProductDetail = () => {
     if (!editItemId) return null;
     return cart.find((i) => i.id === editItemId || i.configurationHash === editItemId);
   }, [editItemId, cart]);
-
-  const [activeThumb, setActiveThumb] = useState(0);
-  const [activeTab, setActiveTab] = useState('description');
-  const [activeVariantImages, setActiveVariantImages] = useState(null);
 
   // Perspective images calculation
   const perspectiveImages = useMemo(() => {
@@ -123,333 +118,192 @@ export const ProductDetail = () => {
     [product]
   );
 
+  // Monitor scroll for mobile sticky purchase bar
+  useEffect(() => {
+    const handleScroll = () => {
+      if (!mainPurchaseRef.current) return;
+      const rect = mainPurchaseRef.current.getBoundingClientRect();
+      // Show mobile bar when scrolled past the top of the purchase controls
+      setIsMobileBarVisible(rect.bottom < window.innerHeight);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Sleek Skeleton Loading State
   if (isLoading) {
     return (
-      <div className="min-h-[50vh] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-[#E4232C] border-t-transparent rounded-full animate-spin"></div>
+      <div className="bg-white min-h-screen py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8 animate-pulse">
+          {/* Breadcrumb Skeleton */}
+          <div className="h-4 w-64 bg-slate-100 rounded-md"></div>
+
+          {/* 2-Column Skeleton */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
+            <div className="lg:col-span-7 space-y-4">
+              <div className="aspect-16/11 bg-slate-100 rounded-2xl w-full"></div>
+              <div className="flex gap-3">
+                <div className="w-18 h-18 bg-slate-100 rounded-xl"></div>
+                <div className="w-18 h-18 bg-slate-100 rounded-xl"></div>
+                <div className="w-18 h-18 bg-slate-100 rounded-xl"></div>
+              </div>
+            </div>
+
+            <div className="lg:col-span-5 space-y-6">
+              <div className="h-4 w-24 bg-slate-100 rounded"></div>
+              <div className="h-8 w-3/4 bg-slate-100 rounded-lg"></div>
+              <div className="h-10 w-44 bg-slate-100 rounded-xl"></div>
+              <div className="h-48 bg-slate-100 rounded-2xl"></div>
+              <div className="h-12 w-full bg-slate-100 rounded-xl"></div>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
 
+  // Not Found State
   if (!product) {
     return (
-      <div className="min-h-[50vh] flex flex-col items-center justify-center py-16 px-4 text-center">
-        <h2 className="text-xl font-bold text-slate-800 mb-2">Product Not Found</h2>
-        <p className="text-slate-500 text-sm mb-6">The requested optical product is currently unavailable.</p>
-        <Link to="/shop" className="px-6 py-2.5 bg-[#E4232C] text-white font-bold text-sm rounded-lg hover:bg-[#c91821] transition-colors">
-          Browse Catalog
+      <div className="min-h-[60vh] flex flex-col items-center justify-center py-20 px-4 text-center">
+        <div className="w-16 h-16 rounded-full bg-rose-50 text-[#E4232C] flex items-center justify-center mb-4">
+          <ArrowLeft size={24} />
+        </div>
+        <h2 className="text-2xl font-extrabold text-[#14232E] mb-2">Eyewear Product Not Found</h2>
+        <p className="text-slate-500 text-sm max-w-md mb-6 leading-relaxed">
+          The requested eyeglasses model is currently unavailable or may have been discontinued from our catalog.
+        </p>
+        <Link
+          to="/shop"
+          className="px-7 py-3 bg-[#E4232C] hover:bg-[#C81921] text-white font-extrabold text-xs uppercase tracking-wider rounded-xl transition-all shadow-md"
+        >
+          Explore Collection
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="bg-white min-h-screen py-5 sm:py-7">
+    <div className="bg-white min-h-screen py-5 sm:py-8 pb-20 sm:pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Breadcrumbs */}
-        <nav className="flex items-center gap-2 text-xs text-slate-500 mb-6 font-medium">
+        {/* Breadcrumb Navigation */}
+        <nav className="flex items-center gap-1.5 text-xs text-slate-500 mb-6 font-medium overflow-x-auto whitespace-nowrap scrollbar-none">
           <Link to="/" className="hover:text-[#E4232C] transition-colors">Home</Link>
-          <span>&gt;</span>
-          <Link to="/shop" className="hover:text-[#E4232C] transition-colors">Shop</Link>
-          <span>&gt;</span>
-          <Link to={`/${product.category || 'eyeglasses'}`} className="hover:text-[#E4232C] transition-colors capitalize">
+          <ChevronRight size={12} className="text-slate-400 shrink-0" />
+          <Link to="/shop" className="hover:text-[#E4232C] transition-colors">Catalog</Link>
+          <ChevronRight size={12} className="text-slate-400 shrink-0" />
+          <Link
+            to={`/${product.categorySlug || product.category || 'eyeglasses'}`}
+            className="hover:text-[#E4232C] transition-colors capitalize"
+          >
             {product.category?.replace('-', ' ') || 'Eyeglasses'}
           </Link>
-          <span>&gt;</span>
-          <span className="text-slate-800 font-semibold">{product.name}</span>
+          <ChevronRight size={12} className="text-slate-400 shrink-0" />
+          <span className="text-slate-800 font-bold truncate max-w-[200px] sm:max-w-md">
+            {product.name}
+          </span>
         </nav>
 
-        {/* Edit Configuration Banner (if present) */}
+        {/* Edit Configuration Notice (When returning from Cart) */}
         {editCartItem && (
-          <div className="mb-6 p-3.5 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between text-xs text-blue-900">
+          <div className="mb-6 p-4 bg-blue-50/80 border border-blue-200 rounded-2xl flex items-center justify-between text-xs text-blue-900 shadow-2xs">
             <div>
-              <strong>Editing Cart Item:</strong> You are modifying previous configuration for <em>{product.name}</em>.
+              <strong>Editing Cart Item:</strong> You are modifying previous parameters for <em>{product.name}</em>.
             </div>
-            <Link to="/cart" className="font-bold underline hover:text-blue-700">
+            <Link to="/cart" className="font-extrabold underline hover:text-blue-700 ml-4 shrink-0">
               Return to Cart
             </Link>
           </div>
         )}
 
-        {/* Main Product Layout: 2 Columns */}
+        {/* Main Product Layout: Balanced 2 Columns */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
-          {/* ================= LEFT COLUMN: PRODUCT SHOWCASE & TABS ================= */}
+          {/* ================= LEFT COLUMN: VISUAL EXPERIENCE & TABS ================= */}
           <div className="lg:col-span-7 space-y-8">
-            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-start">
-              
-              {/* Large Main Showcase Stage */}
-              <div className="order-1 sm:order-2 relative w-full flex-1 aspect-4/3 sm:aspect-16/11 bg-[#F8F9FA] rounded-2xl border border-slate-200/80 p-3 sm:p-6 md:p-8 flex items-center justify-center overflow-hidden">
-                {product.discountPercent && (
-                  <span className="absolute top-3.5 left-3.5 sm:top-4 sm:left-4 bg-[#E4232C] text-white text-xs font-extrabold px-2.5 py-1 rounded-sm uppercase tracking-wider z-10 shadow-2xs">
-                    {product.discountPercent}% OFF
-                  </span>
-                )}
-
-                {/* Left Arrow */}
-                {perspectiveImages.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setActiveThumb((prev) => (prev === 0 ? perspectiveImages.length - 1 : prev - 1))}
-                    className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-slate-700 flex items-center justify-center shadow-xs transition-colors cursor-pointer z-10"
-                    aria-label="Previous image"
-                  >
-                    <ChevronLeft size={18} />
-                  </button>
-                )}
-
-                {/* Right Arrow */}
-                {perspectiveImages.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => setActiveThumb((prev) => (prev === perspectiveImages.length - 1 ? 0 : prev + 1))}
-                    className="absolute right-2.5 sm:right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white/80 hover:bg-white text-slate-700 flex items-center justify-center shadow-xs transition-colors cursor-pointer z-10"
-                    aria-label="Next image"
-                  >
-                    <ChevronRight size={18} />
-                  </button>
-                )}
-
-                {/* Main Product Image */}
-                <img
-                  src={perspectiveImages[activeThumb] || perspectiveImages[0]}
-                  alt={product.name}
-                  className="w-full h-full object-contain mix-blend-multiply transition-all duration-300"
-                />
-              </div>
-
-              {/* Thumbnails */}
-              {perspectiveImages.length > 1 && (
-                <div className="order-2 sm:order-1 flex flex-row sm:flex-col gap-2.5 sm:gap-3 shrink-0 justify-center sm:justify-start">
-                  {perspectiveImages.slice(0, 5).map((img, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setActiveThumb(idx)}
-                      className={`flex-1 sm:flex-initial w-16 h-16 sm:w-18 sm:h-18 max-w-[80px] aspect-square rounded-xl border p-1 bg-[#F8F9FA] overflow-hidden transition-all cursor-pointer ${
-                        activeThumb === idx
-                          ? 'border-[#E4232C] ring-2 ring-[#E4232C]/20 shadow-xs'
-                          : 'border-slate-200 hover:border-slate-300'
-                      }`}
-                    >
-                      <img
-                        src={img}
-                        alt={`Thumbnail ${idx + 1}`}
-                        className="w-full h-full object-contain mix-blend-multiply"
-                      />
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Detailed Information Tabs */}
-            <div className="pt-2">
-              <div className="flex items-center gap-6 sm:gap-8 border-b border-slate-200 overflow-x-auto text-xs sm:text-sm font-bold">
-                {[
-                  { id: 'description', label: 'Description' },
-                  { id: 'features', label: 'Features' },
-                  { id: 'specifications', label: 'Specifications' },
-                  { id: 'shipping', label: 'Shipping & Returns' },
-                  { id: 'reviews', label: 'Reviews' }
-                ].map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => setActiveTab(tab.id)}
-                    className={`pb-3.5 relative whitespace-nowrap cursor-pointer transition-colors ${
-                      activeTab === tab.id ? 'text-[#E4232C]' : 'text-slate-500 hover:text-[#14232E]'
-                    }`}
-                  >
-                    <span>{tab.label}</span>
-                    {activeTab === tab.id && (
-                      <span className="absolute bottom-0 left-0 w-full h-[2.5px] bg-[#E4232C] rounded-full" />
-                    )}
-                  </button>
-                ))}
-              </div>
-
-              {/* Tab Contents */}
-              <div className="py-5 text-xs sm:text-sm text-slate-600 leading-relaxed">
-                {activeTab === 'description' && (
-                  <div className="space-y-4">
-                    <p>{product.description}</p>
-                    {product.features && (
-                      <ul className="space-y-2 pt-1 text-slate-700">
-                        {product.features.map((feat, idx) => (
-                          <li key={idx} className="flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                            <span>{feat}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                )}
-
-                {activeTab === 'features' && (
-                  <ul className="space-y-2.5 text-slate-700">
-                    {(product.features || [
-                      'Blue-light blocking and anti-glare scratch resistant coating',
-                      'Ergonomic keyhole nose bridge prevents slipping',
-                      '100% UV400 radiation protection certified',
-                      'Includes premium hard case and microfiber cleaning cloth'
-                    ]).map((f, i) => (
-                      <li key={i} className="flex items-center gap-2">
-                        <Check size={14} className="text-[#E4232C]" />
-                        <span>{f}</span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                {activeTab === 'specifications' && (
-                  <div className="overflow-hidden border border-slate-200 rounded-xl max-w-lg">
-                    <table className="w-full text-xs text-left">
-                      <tbody className="divide-y divide-slate-100">
-                        {Object.entries(product.specifications || {}).map(([k, v]) => (
-                          <tr key={k} className="even:bg-slate-50/50">
-                            <td className="px-4 py-2.5 font-bold text-slate-600 w-1/3">{k}</td>
-                            <td className="px-4 py-2.5 text-[#14232E]">{v}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-
-                {activeTab === 'shipping' && (
-                  <div className="space-y-2 text-slate-600">
-                    <p><strong>Free Express Delivery:</strong> 2 to 4 business days on all orders above ₹999.</p>
-                    <p><strong>Hassle-Free Returns:</strong> 7 days easy doorstep pickup if the fit isn't right.</p>
-                    <p><strong>Optical Lab Certified:</strong> Centered and adjusted by licensed opticians before shipping.</p>
-                  </div>
-                )}
-
-                {activeTab === 'reviews' && (
-                  <div className="space-y-3">
-                    {product.rating > 0 ? (
-                      <div className="flex items-center gap-2">
-                        <div className="flex text-amber-400">
-                          {[...Array(Math.round(product.rating))].map((_, i) => (
-                            <Star key={i} size={15} className="fill-amber-400" />
-                          ))}
-                        </div>
-                        <span className="font-bold text-[#14232E]">{product.rating} out of 5 stars</span>
-                        {product.reviewCount > 0 && (
-                          <span className="text-slate-400">· {product.reviewCount} customer reviews</span>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-slate-500 text-xs">No reviews yet for this product.</p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-
-          </div>
-
-          {/* ================= RIGHT COLUMN: PRODUCT INFO & UNIFIED CONFIGURATION ================= */}
-          <div className="lg:col-span-5 space-y-6">
-            
-            {/* Header: Brand & Title */}
-            <div>
-              {product.brand && (
-                <span className="text-xs text-slate-400 font-semibold block mb-1">
-                  {product.brand}
-                </span>
-              )}
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-[#14232E] tracking-tight">
-                {product.name}
-              </h1>
-
-              {/* Rating Row */}
-              {product.rating > 0 && (
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="flex text-amber-400">
-                    {[...Array(Math.round(product.rating))].map((_, i) => (
-                      <Star key={i} size={14} className="fill-amber-400" />
-                    ))}
-                  </div>
-                  <span className="text-xs font-semibold text-slate-600">
-                    {product.rating} {product.reviewCount > 0 && <span className="text-slate-400 font-normal">({product.reviewCount} Reviews)</span>}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            {/* Pricing Section */}
-            <div className="flex items-center gap-3">
-              <span className="text-2xl sm:text-3xl font-black text-[#14232E] tabular-nums">
-                ₹{product.price.toLocaleString('en-IN')}
-              </span>
-              {product.mrp && product.mrp > product.price && (
-                <span className="text-sm text-slate-400 line-through tabular-nums">
-                  ₹{product.mrp.toLocaleString('en-IN')}
-                </span>
-              )}
-              {product.discountPercent && (
-                <span className="text-xs font-extrabold text-[#E4232C] bg-rose-50 px-2 py-0.5 rounded-sm">
-                  {product.discountPercent}% OFF
-                </span>
-              )}
-            </div>
-
-            {/* Unified Configuration Engine */}
-            <ProductConfigurationEngine
-              product={product}
-              initialConfiguration={editCartItem?.configuration}
-              initialQuantity={editCartItem?.quantity || 1}
-              onVariantChange={handleVariantChange}
+            {/* High-Fidelity Product Image Gallery */}
+            <ProductImageGallery
+              images={perspectiveImages}
+              productName={product.name}
+              discountPercent={product.discountPercent}
+              isBestSeller={product.isBestSeller}
+              isNewArrival={product.isNew}
+              activeThumb={activeThumb}
+              onThumbChange={setActiveThumb}
             />
 
-            {/* Service Trust Highlights */}
-            <div className="grid grid-cols-3 gap-1 sm:gap-2 py-3 px-1 sm:px-2 border-y border-slate-100 text-slate-600 select-none">
-              <div className="flex items-center gap-1.5 sm:gap-2.5 pr-1 sm:pr-2">
-                <Truck size={17} className="text-[#14232E] shrink-0" />
-                <div className="min-w-0">
-                  <h4 className="text-[10px] sm:text-[11px] font-bold text-[#14232E] leading-tight truncate">Free Shipping</h4>
-                  <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">Above ₹999</p>
-                </div>
-              </div>
+            {/* Comprehensive Product Information Tabs Section */}
+            <ProductTabsSection product={product} />
+          </div>
 
-              <div className="flex items-center gap-1.5 sm:gap-2.5 px-1 sm:px-2 border-l border-slate-200/80">
-                <RotateCcw size={17} className="text-[#14232E] shrink-0" />
-                <div className="min-w-0">
-                  <h4 className="text-[10px] sm:text-[11px] font-bold text-[#14232E] leading-tight truncate">7 Days Return</h4>
-                  <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">Easy returns</p>
-                </div>
-              </div>
+          {/* ================= RIGHT COLUMN: INFO, CONFIGURATION & PURCHASE ================= */}
+          <div ref={mainPurchaseRef} className="lg:col-span-5 space-y-6">
+            {/* Header: Brand, Title, Rating, Pricing, Pincode */}
+            <ProductDetailsInfo product={product} />
 
-              <div className="flex items-center gap-1.5 sm:gap-2.5 pl-1 sm:pl-2 border-l border-slate-200/80">
-                <ShieldCheck size={17} className="text-[#14232E] shrink-0" />
-                <div className="min-w-0">
-                  <h4 className="text-[10px] sm:text-[11px] font-bold text-[#14232E] leading-tight truncate">100% Genuine</h4>
-                  <p className="text-[9px] sm:text-[10px] text-slate-400 truncate">Original gear</p>
-                </div>
+            <div className="border-t border-slate-100 pt-5">
+              {/* Guided Configuration Engine */}
+              <ProductConfigurationEngine
+                product={product}
+                initialConfiguration={editCartItem?.configuration}
+                initialQuantity={editCartItem?.quantity || 1}
+                onVariantChange={handleVariantChange}
+              />
+            </div>
+          </div>
+
+        </div>
+
+        {/* ================= BOTTOM: RELATED PRODUCTS CAROUSEL / GRID ================= */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-16 pt-12 border-t border-slate-100">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <span className="text-xs font-bold uppercase tracking-wider text-[#E4232C]">
+                  Curated Collection
+                </span>
+                <h2 className="text-xl sm:text-2xl font-extrabold text-[#14232E] tracking-tight">
+                  You May Also Like
+                </h2>
               </div>
+              <Link
+                to={`/${product.categorySlug || product.category || 'eyeglasses'}`}
+                className="text-xs font-bold text-slate-600 hover:text-[#E4232C] transition-colors flex items-center gap-1"
+              >
+                <span>View All</span>
+                <ChevronRight size={14} />
+              </Link>
             </div>
 
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
+              {relatedProducts.map((item) => (
+                <ProductCard key={item.id} product={item} layout="grid" />
+              ))}
+            </div>
           </div>
-
-        </div>
-
-        {/* ================= BOTTOM: YOU MAY ALSO LIKE ================= */}
-        <div className="mt-16 pt-10 border-t border-slate-100">
-          <div className="mb-6">
-            <h2 className="text-xl sm:text-2xl font-extrabold text-[#14232E] tracking-tight">
-              You May Also Like
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-5">
-            {relatedProducts.map((item) => (
-              <ProductCard key={item.id} product={item} layout="grid" />
-            ))}
-          </div>
-        </div>
+        )}
 
       </div>
+
+      {/* Mobile Sticky Purchase Bar */}
+      <MobileStickyBar
+        product={product}
+        currentPrice={product.price}
+        onAddToCart={() => {
+          // Scroll up to configurator on mobile if needed, or trigger buy
+          if (mainPurchaseRef.current) {
+            mainPurchaseRef.current.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
+        onBuyNow={() => {
+          if (mainPurchaseRef.current) {
+            mainPurchaseRef.current.scrollIntoView({ behavior: 'smooth' });
+          }
+        }}
+        isVisible={isMobileBarVisible}
+      />
     </div>
   );
 };

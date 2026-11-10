@@ -1,5 +1,5 @@
-import React from 'react';
-import { HelpCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { HelpCircle, Info, Check, Shield } from 'lucide-react';
 
 export const PrescriptionForm = ({
   prescription,
@@ -7,6 +7,7 @@ export const PrescriptionForm = ({
   isProgressive = false,
   config = {}
 }) => {
+  const [showPdHelp, setShowPdHelp] = useState(false);
   const od = prescription.od || {};
   const os = prescription.os || {};
   const pd = prescription.pd || '';
@@ -50,29 +51,29 @@ export const PrescriptionForm = ({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 sm:p-4 space-y-4">
+    <div className="space-y-3.5">
+      <div className="bg-[#F8F9FA] border border-slate-200/90 rounded-2xl p-3.5 sm:p-4.5 space-y-4">
         {/* Right Eye (OD) */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-[#14232E]">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#E4232C]" />
-              <span>Right Eye (OD)</span>
+            <span className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#E4232C]" />
+              <span className="font-extrabold">Right Eye (OD)</span>
             </span>
-            <span className="text-[10px] text-slate-400 font-normal">Oculus Dexter</span>
+            <span className="text-[10px] text-slate-400 font-medium">Oculus Dexter</span>
           </div>
 
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
                 SPH *
               </label>
               <select
                 value={od.sph || ''}
                 onChange={(e) => handleOdChange('sph', e.target.value)}
-                className="w-full text-xs font-semibold py-1.5 px-2 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden"
+                className="w-full text-xs font-bold py-2 px-2 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden"
               >
-                <option value="">Select</option>
+                <option value="">Select SPH</option>
                 {sphOptions.map((v) => (
                   <option key={v} value={v}>{v}</option>
                 ))}
@@ -80,13 +81,13 @@ export const PrescriptionForm = ({
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
                 CYL
               </label>
               <select
                 value={od.cyl || '0.00'}
                 onChange={(e) => handleOdChange('cyl', e.target.value)}
-                className="w-full text-xs font-semibold py-1.5 px-2 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden"
+                className="w-full text-xs font-semibold py-2 px-2 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden"
               >
                 {cylOptions.map((v) => (
                   <option key={v} value={v}>{v}</option>
@@ -95,18 +96,18 @@ export const PrescriptionForm = ({
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
                 Axis (1-180°)
               </label>
               <input
                 type="number"
                 min="1"
                 max="180"
-                placeholder="180"
+                placeholder="Axis"
                 value={od.axis || ''}
                 disabled={!od.cyl || od.cyl === '0.00'}
                 onChange={(e) => handleOdChange('axis', e.target.value)}
-                className="w-full text-xs font-semibold py-1.5 px-2 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden disabled:bg-slate-100 disabled:text-slate-400"
+                className="w-full text-xs font-semibold py-2 px-2 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden disabled:bg-slate-100 disabled:text-slate-400"
               />
             </div>
 
@@ -118,7 +119,7 @@ export const PrescriptionForm = ({
                 <select
                   value={od.add || ''}
                   onChange={(e) => handleOdChange('add', e.target.value)}
-                  className="w-full text-xs font-bold py-1.5 px-2 bg-white border border-[#E4232C]/40 rounded-lg focus:ring-1 focus:ring-[#E4232C] focus:outline-hidden"
+                  className="w-full text-xs font-bold py-2 px-2 bg-white border border-[#E4232C]/40 rounded-lg focus:ring-1 focus:ring-[#E4232C] focus:outline-hidden"
                 >
                   <option value="">Select ADD</option>
                   {addOptions.map((v) => (
@@ -131,26 +132,26 @@ export const PrescriptionForm = ({
         </div>
 
         {/* Left Eye (OS) */}
-        <div className="space-y-2 pt-2 border-t border-slate-200">
+        <div className="space-y-2 pt-3 border-t border-slate-200">
           <div className="flex items-center justify-between text-xs font-bold text-[#14232E]">
-            <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-slate-700" />
-              <span>Left Eye (OS)</span>
+            <span className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-slate-700" />
+              <span className="font-extrabold">Left Eye (OS)</span>
             </span>
-            <span className="text-[10px] text-slate-400 font-normal">Oculus Sinister</span>
+            <span className="text-[10px] text-slate-400 font-medium">Oculus Sinister</span>
           </div>
 
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
                 SPH *
               </label>
               <select
                 value={os.sph || ''}
                 onChange={(e) => handleOsChange('sph', e.target.value)}
-                className="w-full text-xs font-semibold py-1.5 px-2 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden"
+                className="w-full text-xs font-bold py-2 px-2 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden"
               >
-                <option value="">Select</option>
+                <option value="">Select SPH</option>
                 {sphOptions.map((v) => (
                   <option key={v} value={v}>{v}</option>
                 ))}
@@ -158,13 +159,13 @@ export const PrescriptionForm = ({
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
                 CYL
               </label>
               <select
                 value={os.cyl || '0.00'}
                 onChange={(e) => handleOsChange('cyl', e.target.value)}
-                className="w-full text-xs font-semibold py-1.5 px-2 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden"
+                className="w-full text-xs font-semibold py-2 px-2 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden"
               >
                 {cylOptions.map((v) => (
                   <option key={v} value={v}>{v}</option>
@@ -173,18 +174,18 @@ export const PrescriptionForm = ({
             </div>
 
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">
+              <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">
                 Axis (1-180°)
               </label>
               <input
                 type="number"
                 min="1"
                 max="180"
-                placeholder="180"
+                placeholder="Axis"
                 value={os.axis || ''}
                 disabled={!os.cyl || os.cyl === '0.00'}
                 onChange={(e) => handleOsChange('axis', e.target.value)}
-                className="w-full text-xs font-semibold py-1.5 px-2 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden disabled:bg-slate-100 disabled:text-slate-400"
+                className="w-full text-xs font-semibold py-2 px-2 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden disabled:bg-slate-100 disabled:text-slate-400"
               />
             </div>
 
@@ -196,7 +197,7 @@ export const PrescriptionForm = ({
                 <select
                   value={os.add || ''}
                   onChange={(e) => handleOsChange('add', e.target.value)}
-                  className="w-full text-xs font-bold py-1.5 px-2 bg-white border border-[#E4232C]/40 rounded-lg focus:ring-1 focus:ring-[#E4232C] focus:outline-hidden"
+                  className="w-full text-xs font-bold py-2 px-2 bg-white border border-[#E4232C]/40 rounded-lg focus:ring-1 focus:ring-[#E4232C] focus:outline-hidden"
                 >
                   <option value="">Select ADD</option>
                   {addOptions.map((v) => (
@@ -209,13 +210,21 @@ export const PrescriptionForm = ({
         </div>
 
         {/* Pupillary Distance (PD) & Notes */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-200">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-3 border-t border-slate-200">
           <div>
             <div className="flex items-center justify-between mb-1">
-              <label className="text-[10px] font-bold text-slate-600 uppercase">
-                Pupillary Distance (PD mm)
+              <label className="text-[10px] font-bold text-slate-600 uppercase flex items-center gap-1">
+                <span>Pupillary Distance (PD mm)</span>
+                <button
+                  type="button"
+                  onClick={() => setShowPdHelp(!showPdHelp)}
+                  className="text-slate-400 hover:text-[#14232E] transition-colors"
+                  title="What is Pupillary Distance?"
+                >
+                  <HelpCircle size={12} />
+                </button>
               </label>
-              <span className="text-[9px] text-slate-400">Default: 63mm</span>
+              <span className="text-[10px] text-slate-400 font-semibold">Standard: 63mm</span>
             </div>
             <input
               type="number"
@@ -224,8 +233,13 @@ export const PrescriptionForm = ({
               placeholder="e.g. 63"
               value={pd}
               onChange={(e) => onChange({ ...prescription, pd: e.target.value })}
-              className="w-full text-xs font-semibold py-1.5 px-2.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden"
+              className="w-full text-xs font-bold py-2 px-2.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden"
             />
+            {showPdHelp && (
+              <p className="text-[10px] text-slate-500 mt-1 leading-normal bg-white p-2 rounded border border-slate-200">
+                PD is the distance in millimeters between the centers of your pupils. The standard average for adults is 63mm.
+              </p>
+            )}
           </div>
 
           <div>
@@ -234,10 +248,10 @@ export const PrescriptionForm = ({
             </label>
             <input
               type="text"
-              placeholder="e.g. Prism or special instructions"
+              placeholder="e.g. Anti-fatigue or prism note"
               value={notes}
               onChange={(e) => onChange({ ...prescription, notes: e.target.value })}
-              className="w-full text-xs font-normal py-1.5 px-2.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden"
+              className="w-full text-xs font-normal py-2 px-2.5 bg-white border border-slate-300 rounded-lg focus:ring-1 focus:ring-[#14232E] focus:outline-hidden"
             />
           </div>
         </div>

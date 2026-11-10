@@ -1,8 +1,9 @@
 import React from 'react';
 import { LayoutGrid, List, SlidersHorizontal } from 'lucide-react';
 import { SortDropdown } from './SortDropdown';
+
 export const ShopToolbar = ({
-  totalCount,
+  totalCount = 0,
   sortBy,
   onSortChange,
   layout,
@@ -11,13 +12,14 @@ export const ShopToolbar = ({
   activeFilterCount = 0
 }) => {
   return (
-    <div className="flex items-center justify-between gap-2 sm:gap-4 mb-5">
-      {/* Left: Mobile filter button & Total products text */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+    <div className="flex items-center justify-between gap-3 mb-5 py-2">
+      {/* Left: Mobile filter button & Total products count */}
+      <div className="flex items-center gap-2.5 sm:gap-3">
+        {/* Mobile Filter Button */}
         <button
           type="button"
           onClick={onOpenMobileFilters}
-          className="lg:hidden flex items-center gap-1.5 py-1.5 px-3 bg-[#14232E] hover:bg-[#0b1622] text-white rounded-lg text-xs font-semibold cursor-pointer shadow-xs"
+          className="lg:hidden flex items-center gap-1.5 py-2 px-3 bg-[#14232E] hover:bg-[#1E3445] text-white rounded-xl text-xs font-bold transition-all cursor-pointer shadow-xs active:scale-95"
         >
           <SlidersHorizontal size={13} />
           <span>Filters</span>
@@ -27,46 +29,43 @@ export const ShopToolbar = ({
             </span>
           )}
         </button>
-        <div className="leading-tight select-none">
-          <span className="block sm:inline text-xs sm:text-sm font-bold text-[#14232E]">
-            {totalCount}{' '}
-          </span>
-          <span className="block sm:inline text-[11px] sm:text-sm font-bold text-[#14232E]">
-            Products
-          </span>
-        </div>
+
+        <span className="text-xs sm:text-sm font-bold text-slate-700">
+          <strong className="text-[#14232E]">{totalCount}</strong> {totalCount === 1 ? 'Product' : 'Products'} Found
+        </span>
       </div>
 
-      {/* Right: Sort and View mode switch */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* <SortDropdown value={sortBy} onChange={onSortChange} /> */}
+      {/* Right: Sort Dropdown & Layout Switcher */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        <SortDropdown value={sortBy} onChange={onSortChange} />
 
-        <div className="hidden sm:flex items-center gap-1.5">
+        {/* Desktop Layout Buttons */}
+        <div className="hidden sm:flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200/80">
           <button
             type="button"
             onClick={() => onLayoutChange('grid')}
-            className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+            className={`p-1.5 rounded-lg transition-all cursor-pointer ${
               layout === 'grid'
-                ? 'bg-[#E4232C] text-white'
-                : 'text-slate-400 hover:text-slate-700 bg-white border border-slate-200'
+                ? 'bg-white text-[#14232E] shadow-2xs'
+                : 'text-slate-400 hover:text-slate-700'
             }`}
             title="Grid view"
             aria-label="Grid view"
           >
-            <LayoutGrid size={16} />
+            <LayoutGrid size={15} />
           </button>
           <button
             type="button"
             onClick={() => onLayoutChange('list')}
-            className={`p-1.5 rounded-md transition-colors cursor-pointer ${
+            className={`p-1.5 rounded-lg transition-all cursor-pointer ${
               layout === 'list'
-                ? 'bg-[#E4232C] text-white'
-                : 'text-slate-400 hover:text-slate-700 bg-white border border-slate-200'
+                ? 'bg-white text-[#14232E] shadow-2xs'
+                : 'text-slate-400 hover:text-slate-700'
             }`}
             title="List view"
             aria-label="List view"
           >
-            <List size={16} />
+            <List size={15} />
           </button>
         </div>
       </div>
