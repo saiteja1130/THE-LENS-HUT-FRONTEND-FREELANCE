@@ -24,6 +24,7 @@ import {
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
+import { paymentApi } from '../services/paymentApi';
 
 export const Checkout = () => {
   const { toast } = useNotification();
@@ -61,7 +62,6 @@ export const Checkout = () => {
   // Shipping & Payment selection
   const [shippingMethod, setShippingMethod] = useState('standard');
   const [paymentMethod, setPaymentMethod] = useState('upi');
-  const [upiId, setUpiId] = useState('');
   const [confirmedOrder, setConfirmedOrder] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -148,10 +148,8 @@ export const Checkout = () => {
 
     const paymentLabel =
       paymentMethod === 'upi'
-        ? `UPI (${upiId || 'Instant App Link / QR'})`
-        : paymentMethod === 'card'
-          ? 'Debit / Credit Card'
-          : 'Cash on Delivery';
+        ? 'UPI / Dynamic QR Scanner (Razorpay)'
+        : 'Cash on Delivery';
 
     await new Promise((r) => setTimeout(r, 800));
 
@@ -170,34 +168,155 @@ export const Checkout = () => {
       totalPrice: (item.unitPrice || item.product?.price || 0) * (item.quantity || 1)
     }));
 
+    const orderPayload = {
+      items: orderItemsSnapshot,
+      shippingAddress,
+      paymentMethod: paymentLabel,
+      subtotal,
+      discount,
+      discountAmount: discount,
+      couponCode: appliedCoupon || '',
+      shipping: shippingMethod === 'express' ? 149 : shipping,
+      shippingFee: shippingMethod === 'express' ? 149 : shipping,
+      total,
+      totalAmount: total,
+      customerEmail: contactEmail,
+      customerPhone: contactPhone,
+      customerName: fullName,
+    };
+
+    // If Cash on Delivery is selected, create order directly
+    if (paymentMethod === 'cod') {
+      try {
+        const newOrder = await placeOrder({
+          ...orderPayload,
+          paymentMethod: 'Cash on Delivery',
+        });
+
+        if (hasCartItems) {
+          clearCart();
+        }
+        setIsProcessing(false);
+        setConfirmedOrder(newOrder);
+        toast.success('Your order has been placed successfully via Cash on Delivery!');
+      } catch (orderErr) {
+        console.error('[Checkout] Error placing COD order:', orderErr);
+        setIsProcessing(false);
+        toast.error('An error occurred while creating your order. Please try again.');
+      }
+      return;
+    }
+
+    // Online Payment via Razorpay Standard Web Checkout (UPI & Scanner Only)
+    const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
+    if (!razorpayKey) {
+      setIsProcessing(false);
+      toast.error('Razorpay public key is not configured.');
+      return;
+    }
+
+    if (typeof window.Razorpay !== 'function') {
+      setIsProcessing(false);
+      toast.error('Payment checkout is loading. Please try again in a moment or refresh.');
+      return;
+    }
+
     try {
-      const newOrder = await placeOrder({
-        items: orderItemsSnapshot,
-        shippingAddress,
-        paymentMethod: paymentLabel,
-        subtotal,
-        discount,
-        discountAmount: discount,
-        couponCode: appliedCoupon || '',
-        shipping: shippingMethod === 'express' ? 149 : shipping,
-        shippingFee: shippingMethod === 'express' ? 149 : shipping,
-        total,
-        totalAmount: total,
-        customerEmail: contactEmail,
-        customerPhone: contactPhone,
-        customerName: fullName,
+      // Step 1: Create Order on Backend (Deferred creation - no Order document until paid)
+      const amountInPaise = Math.max(100, Math.round(total * 100));
+      const createRes = await paymentApi.createOrder({
+        amount: amountInPaise,
+        currency: 'INR',
+        receipt: `rcpt_${Date.now()}`,
+        orderData: orderPayload,
       });
 
-      if (hasCartItems) {
-        clearCart();
+      if (!createRes.success || !createRes.order_id) {
+        setIsProcessing(false);
+        toast.error(createRes.message || 'Failed to initialize payment with Razorpay.');
+        return;
       }
+
+      // Step 2: Open Razorpay Checkout Modal restricted STRICTLY to UPI & QR Scanner
+      const options = {
+        key: razorpayKey,
+        amount: createRes.amount,
+        currency: createRes.currency || 'INR',
+        name: 'The Lens Hut',
+        description: 'UPI & QR Code Scanner Payment',
+        order_id: createRes.order_id,
+        prefill: {
+          name: fullName,
+          email: contactEmail,
+          contact: contactPhone,
+          method: 'upi',
+        },
+        config: {
+          display: {
+            blocks: {
+              upi: {
+                name: 'Pay using UPI / QR Scanner',
+                instruments: [
+                  {
+                    method: 'upi',
+                    flows: ['qr', 'intent', 'collect'],
+                  },
+                ],
+              },
+            },
+            sequence: ['block.upi'],
+            preferences: {
+              show_default_blocks: false,
+            },
+          },
+        },
+        theme: {
+          color: '#14232E',
+        },
+        handler: async function (response) {
+          // Step 3: Verify Payment Signature on Backend & finalize order
+          try {
+            const verifyRes = await paymentApi.verifyPayment({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+            });
+
+            if (verifyRes.success && verifyRes.order) {
+              if (hasCartItems) {
+                clearCart();
+              }
+              setConfirmedOrder(verifyRes.order);
+              toast.success('Payment verified successfully! Your order has been placed.');
+            } else {
+              toast.error(verifyRes.message || 'Payment signature verification failed.');
+            }
+          } catch (verifyErr) {
+            console.error('[Checkout] Verification error:', verifyErr);
+            toast.error('Payment verification failed. Please contact support.');
+          } finally {
+            setIsProcessing(false);
+          }
+        },
+        modal: {
+          ondismiss: function () {
+            setIsProcessing(false);
+            toast.info('Payment cancelled. Your order has not been placed.');
+          },
+        },
+      };
+
+      const rzpInstance = new window.Razorpay(options);
+      rzpInstance.on('payment.failed', function (failRes) {
+        setIsProcessing(false);
+        toast.error(failRes.error?.description || 'Payment failed. Please try again.');
+      });
+
+      rzpInstance.open();
+    } catch (payErr) {
+      console.error('[Checkout] Razorpay initiation error:', payErr);
       setIsProcessing(false);
-      setConfirmedOrder(newOrder);
-      toast.success('Your order has been placed successfully!');
-    } catch (orderErr) {
-      console.error('[Checkout] Error placing order:', orderErr);
-      setIsProcessing(false);
-      toast.error('An error occurred while creating your order. Please try again.');
+      toast.error('An error occurred while opening the payment gateway.');
     }
   };
 
@@ -521,15 +640,20 @@ export const Checkout = () => {
 
             {/* Step 4: Payment Method */}
             <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
-              <h2 className="text-base font-bold text-[#14232E] flex items-center gap-2.5 pb-3 border-b border-slate-100">
-                <span className="w-6 h-6 rounded-full bg-[#14232E] text-white text-xs flex items-center justify-center font-bold">
-                  4
+              <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                <h2 className="text-base font-bold text-[#14232E] flex items-center gap-2.5">
+                  <span className="w-6 h-6 rounded-full bg-[#14232E] text-white text-xs flex items-center justify-center font-bold">
+                    4
+                  </span>
+                  <span>Payment Method</span>
+                </h2>
+                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                  Instant UPI & QR Scanner
                 </span>
-                <span>Payment Method</span>
-              </h2>
+              </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {/* UPI / QR Radio Card */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* UPI / QR Scanner Radio Card */}
                 <label
                   onClick={() => setPaymentMethod('upi')}
                   className={`p-4 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
@@ -539,7 +663,9 @@ export const Checkout = () => {
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <QrCode size={18} className={paymentMethod === 'upi' ? 'text-[#E4232C]' : 'text-slate-400'} />
+                    <div className="w-8 h-8 rounded-lg bg-red-50 text-[#E4232C] flex items-center justify-center">
+                      <QrCode size={18} />
+                    </div>
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -550,34 +676,10 @@ export const Checkout = () => {
                     />
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-[#14232E] block">UPI / QR</span>
-                    <span className="text-[10px] text-slate-400">GPay, PhonePe, Paytm</span>
-                  </div>
-                </label>
-
-                {/* Credit / Debit Card Radio Card */}
-                <label
-                  onClick={() => setPaymentMethod('card')}
-                  className={`p-4 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
-                    paymentMethod === 'card'
-                      ? 'border-[#14232E] bg-slate-50/80 ring-1 ring-[#14232E] shadow-2xs'
-                      : 'border-slate-200 bg-white hover:border-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <CreditCard size={18} className={paymentMethod === 'card' ? 'text-[#E4232C]' : 'text-slate-400'} />
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="card"
-                      checked={paymentMethod === 'card'}
-                      onChange={() => setPaymentMethod('card')}
-                      className="w-4 h-4 accent-[#E4232C] cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-[#14232E] block">Cards</span>
-                    <span className="text-[10px] text-slate-400">Visa, Mastercard, RuPay</span>
+                    <span className="text-xs font-bold text-[#14232E] block">UPI & QR Code Scanner</span>
+                    <span className="text-[10px] text-slate-500">
+                      Scan with GPay, PhonePe, Paytm, BHIM, CRED or any UPI App
+                    </span>
                   </div>
                 </label>
 
@@ -591,7 +693,9 @@ export const Checkout = () => {
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <Banknote size={18} className={paymentMethod === 'cod' ? 'text-[#E4232C]' : 'text-slate-400'} />
+                    <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
+                      <Banknote size={18} />
+                    </div>
                     <input
                       type="radio"
                       name="paymentMethod"
@@ -608,26 +712,10 @@ export const Checkout = () => {
                 </label>
               </div>
 
-              {/* Optional UPI Input if UPI selected */}
-              {paymentMethod === 'upi' && (
-                <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
-                  <input
-                    type="text"
-                    placeholder="Enter UPI ID (e.g. yourname@okhdfcbank)"
-                    value={upiId}
-                    onChange={(e) => setUpiId(e.target.value)}
-                    className="flex-1 h-10 px-3.5 border border-slate-200 rounded-xl text-xs text-[#14232E] placeholder:text-slate-400 focus:outline-none focus:border-[#14232E] focus:ring-1 focus:ring-[#14232E] transition-all"
-                  />
-                  <span className="text-[11px] text-slate-400 text-center sm:text-left">
-                    or instant dynamic QR code will be generated
-                  </span>
-                </div>
-              )}
-
               {/* Security Footnote */}
               <div className="flex items-center gap-2 text-xs text-slate-500 pt-1">
                 <Lock size={14} className="text-emerald-600 shrink-0" />
-                <span>Your payment information is end-to-end encrypted and 100% secure.</span>
+                <span>UPI & QR Scanner checkout secured and encrypted by Razorpay.</span>
               </div>
             </div>
 
@@ -902,7 +990,7 @@ export const Checkout = () => {
                     <span>Processing Order...</span>
                   </div>
                 ) : (
-                  <span>Place Order</span>
+                  <span>{paymentMethod === 'cod' ? 'Place Cash on Delivery Order' : 'Pay ₹' + total.toLocaleString('en-IN') + ' via UPI / QR Scanner'}</span>
                 )}
               </button>
 
