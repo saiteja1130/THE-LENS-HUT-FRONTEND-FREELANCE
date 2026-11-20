@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronDown, SlidersHorizontal, RotateCcw, Check, Sparkles } from 'lucide-react';
+import { brandApi } from '../../services/brandApi';
 
 export const FilterSidebar = ({
   filters,
@@ -7,8 +8,25 @@ export const FilterSidebar = ({
   onReset,
   totalResultsCount = 0
 }) => {
+  const [brands, setBrands] = useState([]);
+
+  useEffect(() => {
+    let isMounted = true;
+    brandApi.getActiveBrands()
+      .then((res) => {
+        if (isMounted && res.success && Array.isArray(res.data)) {
+          setBrands(res.data);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Accordion open/close states
   const [openSections, setOpenSections] = useState({
+    brand: true,
     gender: true,
     frameShape: true,
     frameType: true,
@@ -127,6 +145,54 @@ export const FilterSidebar = ({
           </div>
         )}
       </div>
+
+      {/* Brand Section */}
+      {brands.length > 0 && (
+        <div className="border-b border-slate-100 pb-4">
+          <button
+            type="button"
+            onClick={() => toggleSection('brand')}
+            className="flex items-center justify-between w-full font-bold text-xs text-[#14232E] py-1 cursor-pointer"
+          >
+            <span>Brands</span>
+            <ChevronDown
+              size={14}
+              className={`transition-transform duration-200 ${
+                openSections.brand ? 'rotate-180 text-slate-600' : 'text-slate-400'
+              }`}
+            />
+          </button>
+
+          {openSections.brand && (
+            <div className="space-y-2 pt-2.5 max-h-48 overflow-y-auto pr-1">
+              {brands.map((b) => {
+                const isChecked = (filters.brand || []).includes(b.name);
+                return (
+                  <label
+                    key={b._id || b.name}
+                    className="flex items-center justify-between text-xs cursor-pointer hover:text-[#14232E] group select-none"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={() => toggleArrayFilter('brand', b.name)}
+                        className="w-3.5 h-3.5 rounded border-slate-300 accent-[#E4232C] cursor-pointer"
+                      />
+                      <span className={isChecked ? 'font-bold text-[#14232E]' : 'text-slate-600'}>
+                        {b.name}
+                      </span>
+                    </div>
+                    {b.itemCount > 0 && (
+                      <span className="text-[10px] text-slate-400 font-medium">({b.itemCount})</span>
+                    )}
+                  </label>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 2. Gender */}
       <div className="border-b border-slate-100 pb-4">
@@ -281,7 +347,7 @@ export const FilterSidebar = ({
         {openSections.frameMaterial && (
           <div className="space-y-2 pt-2.5">
             {frameMaterials.map((mat) => {
-              const isChecked = (filters.brand || []).includes(mat.value);
+              const isChecked = (filters.frameMaterial || []).includes(mat.value);
               return (
                 <label
                   key={mat.value}
@@ -291,7 +357,7 @@ export const FilterSidebar = ({
                     <input
                       type="checkbox"
                       checked={isChecked}
-                      onChange={() => toggleArrayFilter('brand', mat.value)}
+                      onChange={() => toggleArrayFilter('frameMaterial', mat.value)}
                       className="w-3.5 h-3.5 rounded border-slate-300 accent-[#E4232C] cursor-pointer"
                     />
                     <span className={isChecked ? 'font-bold text-[#14232E]' : 'text-slate-600'}>

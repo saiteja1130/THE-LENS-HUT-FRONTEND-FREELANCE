@@ -16,6 +16,7 @@ import { Eyeglasses } from './pages/Eyeglasses';
 import { Sunglasses } from './pages/Sunglasses';
 import { ContactLenses } from './pages/ContactLenses';
 import { Accessories } from './pages/Accessories';
+import { Brands } from './pages/Brands';
 import { ProductDetail } from './pages/ProductDetail';
 import { Cart } from './pages/Cart';
 import { Checkout } from './pages/Checkout';
@@ -67,6 +68,7 @@ export default function App() {
                   <Route path="/sunglasses" element={<Sunglasses />} />
                   <Route path="/contact-lenses" element={<ContactLenses />} />
                   <Route path="/accessories" element={<Accessories />} />
+                  <Route path="/brands" element={<Brands />} />
                   <Route path="/product/:productSlug" element={<ProductDetail />} />
                   <Route path="/cart" element={<Cart />} />
                   <Route path="/checkout" element={<Checkout />} />

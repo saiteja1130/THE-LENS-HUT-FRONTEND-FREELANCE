@@ -48,13 +48,24 @@ export const ActiveFilterChips = ({
     });
   }
 
-  // Brand / Material chips
+  // Brand chips
   if (Array.isArray(filters.brand)) {
     filters.brand.forEach((b) => {
       chips.push({
         type: 'brand',
-        label: `Material: ${b}`,
+        label: `Brand: ${b}`,
         onRemove: () => onRemoveFilter('brand', b),
+      });
+    });
+  }
+
+  // Frame Material chips
+  if (Array.isArray(filters.frameMaterial)) {
+    filters.frameMaterial.forEach((m) => {
+      chips.push({
+        type: 'frameMaterial',
+        label: `Material: ${m}`,
+        onRemove: () => onRemoveFilter('frameMaterial', m),
       });
     });
   }

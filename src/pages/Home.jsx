@@ -1,6 +1,7 @@
 import React from 'react';
 import { Hero } from '../components/home/Hero';
 import { CategoryStrip } from '../components/home/CategoryStrip';
+import { BrandShowcase } from '../components/home/BrandShowcase';
 import { PromoBanners } from '../components/home/PromoBanners';
 import { FeaturedProducts } from '../components/home/FeaturedProducts';
 import { ValueProps } from '../components/home/ValueProps';
@@ -13,6 +14,9 @@ export const Home = () => {
 
       {/* 2. 4-Category Cards Strip */}
       <CategoryStrip />
+
+      {/* 2b. Featured Designer Brands */}
+      <BrandShowcase />
 
       {/* 3. Promo 2-Banner Section (Trending Frames 50% Off & Sunglasses) */}
       <PromoBanners />

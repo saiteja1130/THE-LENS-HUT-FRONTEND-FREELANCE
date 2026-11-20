@@ -29,15 +29,17 @@ export const Shop = ({
   const urlCategory = searchParams.get('category') || initialCategory || 'all';
   const urlGender = searchParams.get('gender') || 'All';
   const urlShape = searchParams.get('shape');
+  const urlBrand = searchParams.get('brand');
 
   const productSectionRef = useRef(null);
 
   const [filters, setFilters] = useState({
     category: urlCategory,
     gender: urlGender,
-    brand: [],
+    brand: urlBrand ? [urlBrand] : [],
     frameShape: urlShape ? [urlShape] : [],
     frameType: [],
+    frameMaterial: [],
     color: [],
     maxPrice: 15000,
     polarizedOnly: false,
@@ -86,10 +88,12 @@ export const Shop = ({
 
   // Sync category changes from props or URL
   useEffect(() => {
+    const brandParam = searchParams.get('brand');
     setFilters((prev) => ({
       ...prev,
       category: initialCategory || searchParams.get('category') || prev.category,
       gender: searchParams.get('gender') || prev.gender,
+      brand: brandParam ? [brandParam] : (searchParams.has('brand') ? [] : prev.brand),
       frameShape: searchParams.get('shape') ? [searchParams.get('shape')] : prev.frameShape,
     }));
     setCurrentPage(1);
@@ -102,12 +106,19 @@ export const Shop = ({
   };
 
   const handleResetFilters = () => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('brand');
+    nextParams.delete('shape');
+    if (!initialCategory) nextParams.delete('category');
+    setSearchParams(nextParams);
+
     setFilters({
       category: initialCategory || 'all',
       gender: 'All',
       brand: [],
       frameShape: [],
       frameType: [],
+      frameMaterial: [],
       color: [],
       maxPrice: 15000,
       polarizedOnly: false,
@@ -126,11 +137,30 @@ export const Shop = ({
 
   const handleRemoveSingleFilter = (field, value) => {
     if (field === 'category') {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('category');
+      setSearchParams(nextParams);
       setFilters((prev) => ({ ...prev, category: initialCategory || 'all' }));
     } else if (field === 'gender') {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete('gender');
+      setSearchParams(nextParams);
       setFilters((prev) => ({ ...prev, gender: 'All' }));
     } else if (field === 'maxPrice') {
       setFilters((prev) => ({ ...prev, maxPrice: 15000 }));
+    } else if (field === 'brand') {
+      const nextArr = Array.isArray(filters.brand) ? filters.brand.filter((item) => item !== value) : [];
+      const nextParams = new URLSearchParams(searchParams);
+      if (nextArr.length === 0) {
+        nextParams.delete('brand');
+      } else {
+        nextParams.set('brand', nextArr[0]);
+      }
+      setSearchParams(nextParams);
+      setFilters((prev) => ({
+        ...prev,
+        brand: nextArr,
+      }));
     } else {
       setFilters((prev) => ({
         ...prev,
@@ -192,14 +222,20 @@ export const Shop = ({
           }
         }
 
-        // Frame Material / Brand
+        // Brand filter
         if (filters.brand?.length > 0) {
-          const pMat = (p.material || p.frameSpecifications?.material || '').toLowerCase();
-          const pBrand = (p.brand || '').toLowerCase();
+          const pBrand = (p.brand || '').toLowerCase().trim();
           const matches = filters.brand.some((b) => {
-            const bl = b.toLowerCase();
-            return pMat.includes(bl) || pBrand.includes(bl);
+            const bl = b.toLowerCase().trim();
+            return pBrand === bl || pBrand.includes(bl);
           });
+          if (!matches) return false;
+        }
+
+        // Frame Material filter
+        if (filters.frameMaterial?.length > 0) {
+          const pMat = (p.material || p.frameSpecifications?.material || '').toLowerCase();
+          const matches = filters.frameMaterial.some((m) => pMat.includes(m.toLowerCase()));
           if (!matches) return false;
         }
 

@@ -81,6 +81,9 @@ export const MobileMenu = ({
               name: 'Contact Lenses & Care',
               path: '/contact-lenses'
             }, {
+              name: 'Designer Brands',
+              path: '/brands'
+            }, {
               name: 'All Eyewear',
               path: '/shop'
             }].map(item => <Link key={item.path} to={item.path} onClick={onClose} className="block py-2 text-sm font-semibold text-[#14232E] hover:text-[#E4232C] transition-colors">

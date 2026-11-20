@@ -86,6 +86,9 @@ export const Header = () => {
     label: 'Contact Lenses',
     path: '/contact-lenses'
   }, {
+    label: 'Brands',
+    path: '/brands'
+  }, {
     label: 'Accessories',
     path: '/accessories'
   }, {
