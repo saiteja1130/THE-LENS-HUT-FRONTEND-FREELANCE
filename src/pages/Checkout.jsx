@@ -213,6 +213,14 @@ export const Checkout = () => {
         theme: {
           color: '#14232E',
         },
+        config: {
+          display: {
+            hide: [{ method: 'emi' }],
+            preferences: {
+              show_default_blocks: true,
+            },
+          },
+        },
         handler: async function (response) {
           // Step 3: Verify Payment Signature on Backend & finalize order
           try {
