@@ -12,7 +12,7 @@ export const FAQS = [{
   id: 'faq-3',
   category: 'Delivery',
   question: 'What are the delivery timelines across India?',
-  answer: 'Metro cities receive standard frame and zero-power shipments in 2–4 business days. Custom prescription lenses (single vision and progressive) undergo computer-controlled edging and 12-point optical QC before dispatch. Shipping is free for orders above ₹999 and ₹99 otherwise.'
+  answer: 'Metro cities receive standard frame and zero-power shipments in 2–4 business days. Custom prescription lenses (single vision and progressive) undergo computer-controlled edging and 12-point optical QC before dispatch. Delivery fees are calculated at checkout based on your order total.'
 }, {
   id: 'faq-4',
   category: 'Returns',

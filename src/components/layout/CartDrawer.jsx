@@ -11,6 +11,7 @@ export const CartDrawer = () => {
     subtotal,
     discount,
     shipping,
+    shippingSettings,
     total,
     isCartDrawerOpen,
     setIsCartDrawerOpen,
@@ -185,9 +186,9 @@ export const CartDrawer = () => {
           {cart.length > 0 && (
             <div className="p-5 sm:p-6 border-t border-slate-100 bg-[#F8F9FA]/80 space-y-4">
               {/* Free Shipping Alert if applicable */}
-              {subtotal < 999 && (
+              {shipping > 0 && subtotal < shippingSettings.freeShippingMinimum && (
                 <div className="p-2.5 rounded-xl bg-amber-50/80 border border-amber-200/70 text-[11px] text-amber-800 flex items-center justify-between">
-                  <span>Add ₹{(999 - subtotal).toLocaleString('en-IN')} more for <strong>FREE Delivery</strong></span>
+                  <span>Add ₹{(shippingSettings.freeShippingMinimum - subtotal).toLocaleString('en-IN')} more for <strong>FREE Delivery</strong></span>
                 </div>
               )}
 

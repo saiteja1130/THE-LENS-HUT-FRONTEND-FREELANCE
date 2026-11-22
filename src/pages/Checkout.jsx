@@ -101,8 +101,8 @@ export const Checkout = () => {
 
   const subtotal = appliedCoupon ? cartSubtotal : rawSubtotal;
   const discount = cartDiscount;
-  const shipping = subtotal >= 999 || subtotal === 0 ? 0 : 99;
-  const total = Math.max(0, subtotal - discount + shipping);
+  const shipping = cartShipping;
+  const total = cartTotal;
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -285,10 +285,6 @@ export const Checkout = () => {
             {/* Receipt Summary Box */}
             <div className="bg-[#F8F9FA] rounded-2xl border border-slate-200/80 p-5 sm:p-6 text-left space-y-3.5 text-xs sm:text-sm">
               <div className="flex justify-between items-center pb-2.5 border-b border-slate-200/70">
-                <span className="text-slate-500 font-medium">Tracking Number:</span>
-                <span className="font-mono font-bold text-[#14232E]">{confirmedOrder.trackingNumber || 'Assigned on dispatch'}</span>
-              </div>
-              <div className="flex justify-between items-center pb-2.5 border-b border-slate-200/70">
                 <span className="text-slate-500 font-medium">Estimated Delivery:</span>
                 <span className="font-semibold text-emerald-700">{confirmedOrder.estimatedDelivery || '3-5 business days'}</span>
               </div>
@@ -307,7 +303,7 @@ export const Checkout = () => {
                 to="/account?tab=orders"
                 className="w-full sm:w-auto px-7 py-3 bg-[#E4232C] hover:bg-[#C81921] text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-xs"
               >
-                View Live Order Status
+                View Order Details
               </Link>
               <Link
                 to="/"

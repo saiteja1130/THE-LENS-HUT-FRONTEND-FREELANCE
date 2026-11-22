@@ -1,13 +1,19 @@
 import React from 'react';
 import { Truck, HelpCircle, Phone } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useCart } from '../../context/CartContext';
 export const AnnouncementBar = () => {
+  const { shippingSettings } = useCart();
   return <div className="bg-[#0b1a28] text-white text-[11px] font-medium py-2 px-4 sm:px-8 border-b border-white/5">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         {/* Left: Free Shipping message */}
         <div className="flex items-center gap-2 text-slate-200">
           <Truck size={14} className="text-white shrink-0" />
-          <span className="font-normal text-slate-200">Free Shipping on orders above ₹999</span>
+          <span className="font-normal text-slate-200">
+            {shippingSettings.freeShippingMinimum === 0 || shippingSettings.standardShippingFee === 0
+              ? 'Free Shipping on all orders'
+              : `Free Shipping on orders ₹${shippingSettings.freeShippingMinimum.toLocaleString('en-IN')}+`}
+          </span>
         </div>
 
         {/* Right: Quick Utility Links */}

@@ -428,7 +428,7 @@ export const Account = () => {
                       </div>
                       <p className="text-xs sm:text-sm font-bold text-[#14232E]">No orders placed yet</p>
                       <p className="text-xs text-slate-400 max-w-sm mx-auto">
-                        Your recent eyewear purchases will appear here after checkout with instant tracking.
+                        Your recent eyewear purchases will appear here after checkout.
                       </p>
                       <Link
                         to="/eyeglasses"
@@ -667,7 +667,7 @@ export const Account = () => {
                       All Orders
                     </h2>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      Real-time status updates, prescription data, and tracking details
+                      Order status and prescription details
                     </p>
                   </div>
                   <button
@@ -703,9 +703,6 @@ export const Account = () => {
                       const orderDate = order.date || (order.createdAt ? new Date(order.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'Recently');
                       const orderStatus = order.orderStatus || order.status || 'Processing';
                       const orderTotal = Number(order.totalAmount !== undefined ? order.totalAmount : order.total) || 0;
-                      const trackingNum = order.trackingNumber || order.tracking?.trackingNumber || order.tracking?.trackingId || '';
-                      const courier = order.tracking?.courierName || '';
-                      const estDelivery = order.estimatedDelivery || order.tracking?.estimatedDelivery || '';
 
                       return (
                         <div
@@ -820,8 +817,8 @@ export const Account = () => {
                                 </div>
                               )}
 
-                              {/* Delivery & Courier Tracking Summary */}
-                              <div className="bg-[#FAF9F6] border border-slate-200/80 rounded-xl p-3.5 text-xs grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {/* Shipping Address */}
+                              <div className="bg-[#FAF9F6] border border-slate-200/80 rounded-xl p-3.5 text-xs">
                                 <div>
                                   <span className="text-[11px] font-bold text-slate-400 block mb-1">
                                     SHIPPING ADDRESS
@@ -831,16 +828,6 @@ export const Account = () => {
                                     {order.shippingAddress?.street}, {order.shippingAddress?.locality ? `${order.shippingAddress.locality}, ` : ''}{order.shippingAddress?.city}, {order.shippingAddress?.state} - {order.shippingAddress?.pincode}
                                   </p>
                                   <p className="text-slate-500 text-[11px] mt-0.5">Phone: {order.shippingAddress?.phone}</p>
-                                </div>
-                                <div>
-                                  <span className="text-[11px] font-bold text-slate-400 block mb-1">
-                                    COURIER & DISPATCH
-                                  </span>
-                                  <p className="font-medium text-slate-700">Courier: <strong className="text-[#14232E]">{courier || 'Pending dispatch'}</strong></p>
-                                  <p className="font-medium text-slate-700">Tracking ID: <span className="font-mono text-[#14232E]">{trackingNum || 'Pending'}</span></p>
-                                  {estDelivery && (
-                                    <p className="font-medium text-emerald-700 text-[11px] mt-0.5">Est. Delivery: {estDelivery}</p>
-                                  )}
                                 </div>
                               </div>
                             </div>
@@ -852,19 +839,6 @@ export const Account = () => {
                               Total: <strong className="text-[#14232E] font-extrabold text-sm tabular-nums">₹{orderTotal.toLocaleString('en-IN')}</strong>
                               {order.paymentMethod && <span className="text-slate-400 ml-2">({order.paymentMethod})</span>}
                             </div>
-                            {trackingNum ? (
-                              <Link
-                                to={`/track-order?trackingId=${encodeURIComponent(trackingNum)}`}
-                                className="text-xs font-bold text-[#14232E] hover:text-[#E4232C] flex items-center gap-1 transition-colors"
-                              >
-                                <span>Live Tracking</span>
-                                <ChevronRight size={14} />
-                              </Link>
-                            ) : (
-                              <span className="text-[11px] text-slate-400">
-                                Tracking available once shipped
-                              </span>
-                            )}
                           </div>
                         </div>
                       );

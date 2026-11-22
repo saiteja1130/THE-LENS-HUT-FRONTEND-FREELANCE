@@ -1,12 +1,16 @@
 import React from 'react';
 import { Truck, ShieldCheck, RotateCcw, Headphones } from 'lucide-react';
+import { useCart } from '../../context/CartContext';
 
 export const ValueProps = () => {
+  const { shippingSettings } = useCart();
   const items = [
     {
       icon: <Truck size={24} strokeWidth={1.7} className="text-[#14232E] shrink-0" />,
       title: 'Free Shipping',
-      desc: 'On orders above ₹999'
+      desc: shippingSettings.freeShippingMinimum === 0 || shippingSettings.standardShippingFee === 0
+        ? 'On all orders'
+        : `On orders ₹${shippingSettings.freeShippingMinimum.toLocaleString('en-IN')}+`
     },
     {
       icon: <ShieldCheck size={24} strokeWidth={1.7} className="text-[#14232E] shrink-0" />,

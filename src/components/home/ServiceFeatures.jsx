@@ -1,10 +1,14 @@
 import React from 'react';
 import { Truck, RotateCcw, Tag, ShieldCheck } from 'lucide-react';
+import { useCart } from '../../context/CartContext';
 export const ServiceFeatures = () => {
+  const { shippingSettings } = useCart();
   const features = [{
     icon: <Truck size={22} className="text-[#E4232C]" />,
     title: 'FREE DELIVERY',
-    description: 'Free shipping on orders above ₹999 across India.'
+    description: shippingSettings.freeShippingMinimum === 0 || shippingSettings.standardShippingFee === 0
+      ? 'Free shipping on all orders across India.'
+      : `Free shipping on orders ₹${shippingSettings.freeShippingMinimum.toLocaleString('en-IN')}+ across India.`
   }, {
     icon: <RotateCcw size={22} className="text-[#E4232C]" />,
     title: 'EASY RETURNS',

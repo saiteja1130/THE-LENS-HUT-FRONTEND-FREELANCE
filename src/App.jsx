@@ -28,7 +28,6 @@ import { ForgotPassword } from './pages/ForgotPassword';
 import { ResetPassword } from './pages/ResetPassword';
 import { AboutUs } from './pages/AboutUs';
 import { ContactUs } from './pages/ContactUs';
-import { TrackOrder } from './pages/TrackOrder';
 import { FAQs } from './pages/FAQs';
 import { Terms } from './pages/Terms';
 import { Privacy } from './pages/Privacy';
@@ -91,9 +90,6 @@ export default function App() {
                   {/* Informational & Support Pages */}
                   <Route path="/about-us" element={<AboutUs />} />
                   <Route path="/contact-us" element={<ContactUs />} />
-                  <Route path="/track-order" element={<TrackOrder />} />
-                  <Route path="/order/:orderId" element={<TrackOrder />} />
-                  <Route path="/orders/:orderId" element={<TrackOrder />} />
                   <Route path="/faqs" element={<FAQs />} />
 
                   {/* Legal & Policies */}

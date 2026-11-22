@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useCart } from '../../context/CartContext';
 import {
   FileText,
   Ruler,
@@ -16,6 +17,7 @@ import {
 } from 'lucide-react';
 
 export const ProductTabsSection = ({ product }) => {
+  const { shippingSettings } = useCart();
   const [activeTab, setActiveTab] = useState('description');
   const [openAccordions, setOpenAccordions] = useState({
     description: true,
@@ -233,10 +235,12 @@ export const ProductTabsSection = ({ product }) => {
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
                 <div className="flex items-center gap-2 text-slate-800 font-extrabold text-sm">
                   <Truck size={18} className="text-[#E4232C]" />
-                  <span>Free Shipping on Orders ₹999+</span>
+                  <span>{shippingSettings.freeShippingMinimum === 0 || shippingSettings.standardShippingFee === 0 ? 'Free Delivery on all orders' : `Free Delivery on orders ₹${shippingSettings.freeShippingMinimum.toLocaleString('en-IN')}+`}</span>
                 </div>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Shipping is free on orders above ₹999 and costs ₹99 on smaller orders. Customized prescription orders are assembled to order.
+                  {shippingSettings.freeShippingMinimum === 0 || shippingSettings.standardShippingFee === 0
+                    ? 'Delivery is currently free on all orders. Customized prescription orders are assembled to order.'
+                    : `Orders below ₹${shippingSettings.freeShippingMinimum.toLocaleString('en-IN')} have a ₹${shippingSettings.standardShippingFee.toLocaleString('en-IN')} shipping fee. Delivery is free from ₹${shippingSettings.freeShippingMinimum.toLocaleString('en-IN')}. Customized prescription orders are assembled to order.`}
                 </p>
               </div>
 
@@ -432,7 +436,9 @@ export const ProductTabsSection = ({ product }) => {
 
                   {tab.id === 'shipping' && (
                     <div className="space-y-2">
-                      <p><strong>Shipping:</strong> Free on orders above ₹999; ₹99 otherwise.</p>
+                      <p><strong>Shipping:</strong> {shippingSettings.freeShippingMinimum === 0 || shippingSettings.standardShippingFee === 0
+                        ? 'Delivery is currently free on all orders.'
+                        : `A ₹${shippingSettings.standardShippingFee.toLocaleString('en-IN')} fee applies below ₹${shippingSettings.freeShippingMinimum.toLocaleString('en-IN')}; delivery is free from that amount.`}</p>
                       <p><strong>7-Day Returns:</strong> Easy doorstep returns if the frame fit isn't right.</p>
                     </div>
                   )}

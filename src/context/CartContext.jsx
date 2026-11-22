@@ -5,10 +5,12 @@ import { useNotification } from './NotificationContext';
 import { useAuth } from './AuthContext';
 import { cartApi } from '../services/cartApi';
 import { couponApi } from '../services/couponApi';
+import { api } from '../services/api';
 
 const CartContext = createContext(undefined);
 
 const LOCAL_STORAGE_KEY = 'tlh_cart';
+const DEFAULT_SHIPPING_SETTINGS = { freeShippingMinimum: 999, standardShippingFee: 99 };
 
 export const CartProvider = ({ children }) => {
   const { toast } = useNotification();
@@ -29,6 +31,20 @@ export const CartProvider = ({ children }) => {
   const [appliedDiscount, setAppliedDiscount] = useState(0);
   const [validatedSubtotal, setValidatedSubtotal] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [shippingSettings, setShippingSettings] = useState(DEFAULT_SHIPPING_SETTINGS);
+
+  useEffect(() => {
+    let isMounted = true;
+    api.get('/settings/shipping').then((res) => {
+      if (isMounted && res?.success && res.data) {
+        setShippingSettings({
+          freeShippingMinimum: Number(res.data.freeShippingMinimum) || 0,
+          standardShippingFee: Number(res.data.standardShippingFee) || 0,
+        });
+      }
+    }).catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   // Sync state to localStorage whenever cart changes
   useEffect(() => {
@@ -425,7 +441,9 @@ export const CartProvider = ({ children }) => {
 
   const discount = appliedDiscount;
 
-  const shipping = subtotal >= 999 || subtotal === 0 ? 0 : 99;
+  const shipping = subtotal === 0 || subtotal >= shippingSettings.freeShippingMinimum
+    ? 0
+    : shippingSettings.standardShippingFee;
   const total = Math.max(0, subtotal - discount + shipping);
 
   return (
@@ -439,6 +457,7 @@ export const CartProvider = ({ children }) => {
         appliedCoupon,
         appliedCouponType,
         shipping,
+        shippingSettings,
         total,
         isLoading,
         isCartDrawerOpen,

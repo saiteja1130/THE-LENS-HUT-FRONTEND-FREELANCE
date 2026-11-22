@@ -87,7 +87,7 @@ export const ContactUs = () => {
             How Can We Assist Your Vision?
           </h1>
           <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-2xl mx-auto">
-            Have questions regarding frame sizes, digital lens coatings, submitting an optometrist slip, or tracking your dispatch? Our certified optical specialists respond within 2 hours.
+            Have questions regarding frame sizes, digital lens coatings, submitting an optometrist slip, or your order delivery? Our certified optical specialists respond within 2 hours.
           </p>
         </div>
 
@@ -331,7 +331,7 @@ export const ContactUs = () => {
                     className="w-full px-3.5 py-2.5 border border-slate-200 rounded-lg text-xs text-[#14232E] focus:outline-none focus:ring-2 focus:ring-[#14232E]/10 focus:border-[#14232E] bg-white cursor-pointer"
                   >
                     <option value="Prescription Query / Power Verification">Prescription Query / Power Verification</option>
-                    <option value="Order Status & Dispatch Tracking">Order Status & Dispatch Tracking</option>
+                    <option value="Order Status & Delivery">Order Status & Delivery</option>
                     <option value="Lens Coating & Index Recommendation">Lens Coating & Index Recommendation (Blue Cut, Anti-Glare)</option>
                     <option value="14-Day Free Exchange & Return Request">14-Day Free Exchange & Return Request</option>
                     <option value="Book In-Store Eye Checkup">Book In-Store Eye Checkup</option>

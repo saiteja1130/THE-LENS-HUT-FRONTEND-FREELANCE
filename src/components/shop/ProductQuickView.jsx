@@ -10,7 +10,8 @@ export const ProductQuickView = ({
   onClose
 }) => {
   const {
-    addToCart
+    addToCart,
+    shippingSettings
   } = useCart();
   const [selectedColor, setSelectedColor] = useState(product.colors[0]?.name || '');
   const [selectedSize, setSelectedSize] = useState(product.size);
@@ -106,7 +107,7 @@ export const ProductQuickView = ({
               </div>
               <div className="flex items-center gap-1.5">
                 <Truck size={14} className="text-slate-600" />
-                <span>Free Shipping on Orders ₹999+</span>
+                <span>{shippingSettings.freeShippingMinimum === 0 || shippingSettings.standardShippingFee === 0 ? 'Free Shipping on all orders' : `Free Shipping on Orders ₹${shippingSettings.freeShippingMinimum.toLocaleString('en-IN')}+`}</span>
               </div>
               <Link to={`/product/${product.slug}`} onClick={onClose} className="font-semibold text-[#E4232C] hover:underline">
                 Full Details →
