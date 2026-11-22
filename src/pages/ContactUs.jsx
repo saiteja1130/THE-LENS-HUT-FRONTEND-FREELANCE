@@ -39,24 +39,7 @@ export const ContactUs = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    setTimeout(() => {
-      const generatedTicketId = `TLH-${Math.floor(100000 + Math.random() * 900000)}`;
-      setSubmittedTicket({
-        id: generatedTicketId,
-        name,
-        subject,
-        email,
-      });
-      setIsSubmitting(false);
-      toast.success(`Message sent! Reference ticket ${generatedTicketId} created.`);
-      setName('');
-      setEmail('');
-      setPhone('');
-      setOrderId('');
-      setMessage('');
-    }, 600);
+    toast.error('Contact form submission is not available yet. Please contact support using the details below.');
   };
 
   const handleReset = () => {

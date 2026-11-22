@@ -204,30 +204,13 @@ export const AuthProvider = ({
     localStorage.removeItem('thelenshut_auth_token');
     sessionStorage.removeItem('thelenshut_auth_token');
     setUser(null);
+    setOrders([]);
   };
   const forgotPassword = async email => {
-    setIsLoading(true);
-    await new Promise(r => setTimeout(r, 500));
-    setIsLoading(false);
-    if (!email || !email.includes('@')) {
-      return {
-        success: false,
-        message: 'Invalid email address.'
-      };
-    }
-    return {
-      success: true,
-      message: `Password reset link has been dispatched to ${email}.`
-    };
+    return { success: false, message: 'Password recovery is not available yet. Please contact support.' };
   };
-  const resetPassword = async _password => {
-    setIsLoading(true);
-    await new Promise(r => setTimeout(r, 500));
-    setIsLoading(false);
-    return {
-      success: true,
-      message: 'Your password has been successfully reset. You can now login.'
-    };
+  const resetPassword = async () => {
+    return { success: false, message: 'Password recovery is not available yet. Please contact support.' };
   };
   const updateProfile = data => {
     if (!user) return;
