@@ -2,22 +2,6 @@ import { api } from './api';
 
 export const orderApi = {
   /**
-   * Place a new order with backend API
-   */
-  createOrder: async (orderData) => {
-    try {
-      const res = await api.post('/orders', orderData);
-      return res;
-    } catch (error) {
-      console.warn('[orderApi Axios] Create order failed:', error.message);
-      return {
-        success: false,
-        message: 'Network error: Unable to create order',
-      };
-    }
-  },
-
-  /**
    * Fetch authenticated user's order history
    */
   getMyOrders: async () => {

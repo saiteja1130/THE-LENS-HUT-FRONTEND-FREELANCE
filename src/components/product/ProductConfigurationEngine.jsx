@@ -278,7 +278,7 @@ export const ProductConfigurationEngine = ({
           <div className="flex items-center gap-2">
             <Truck size={17} className="text-[#E4232C] shrink-0" />
             <div className="min-w-0">
-              <h4 className="text-[11px] font-bold text-[#14232E] leading-tight truncate">Free Express Delivery</h4>
+              <h4 className="text-[11px] font-bold text-[#14232E] leading-tight truncate">Free Shipping ₹999+</h4>
               <p className="text-[10px] text-slate-400 truncate">Across India</p>
             </div>
           </div>

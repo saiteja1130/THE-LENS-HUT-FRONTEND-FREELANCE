@@ -4,7 +4,7 @@ export const ServiceFeatures = () => {
   const features = [{
     icon: <Truck size={22} className="text-[#E4232C]" />,
     title: 'FREE DELIVERY',
-    description: 'Fast delivery on orders above ₹999 across all Indian pin codes.'
+    description: 'Free shipping on orders above ₹999 across India.'
   }, {
     icon: <RotateCcw size={22} className="text-[#E4232C]" />,
     title: 'EASY RETURNS',

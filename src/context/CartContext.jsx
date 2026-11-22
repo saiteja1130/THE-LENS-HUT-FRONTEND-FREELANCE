@@ -4,6 +4,7 @@ import { calculateItemPrice } from '../services/opticalEngine/pricing';
 import { useNotification } from './NotificationContext';
 import { useAuth } from './AuthContext';
 import { cartApi } from '../services/cartApi';
+import { couponApi } from '../services/couponApi';
 
 const CartContext = createContext(undefined);
 
@@ -24,6 +25,9 @@ export const CartProvider = ({ children }) => {
 
   const [isCartDrawerOpen, setIsCartDrawerOpen] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [appliedCouponType, setAppliedCouponType] = useState(null);
+  const [appliedDiscount, setAppliedDiscount] = useState(0);
+  const [validatedSubtotal, setValidatedSubtotal] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   // Sync state to localStorage whenever cart changes
@@ -34,6 +38,31 @@ export const CartProvider = ({ children }) => {
       console.warn('Failed to save cart to localStorage:', err);
     }
   }, [cart]);
+
+  useEffect(() => {
+    if (!appliedCoupon) return undefined;
+    let current = true;
+    const items = cart.map((item) => ({
+      productId: item.productId || item.product?._id || item.product?.id || item.id,
+      quantity: item.quantity || 1,
+      unitPrice: item.unitPrice || item.product?.price || 0,
+      configuration: item.configuration || {},
+    }));
+    couponApi.validate(appliedCoupon, items).then((result) => {
+      if (!current) return;
+      if (result?.success && result.data) {
+        setAppliedDiscount(result.data.discountAmount || 0);
+        setValidatedSubtotal(result.data.subtotal);
+      }
+      else {
+        setAppliedCoupon(null);
+        setAppliedCouponType(null);
+        setAppliedDiscount(0);
+        setValidatedSubtotal(null);
+      }
+    });
+    return () => { current = false; };
+  }, [cart, appliedCoupon]);
 
   // Sync cart with backend when user is authenticated
   const syncWithServer = useCallback(async () => {
@@ -349,58 +378,37 @@ export const CartProvider = ({ children }) => {
     return discountVal;
   };
 
-  const applyCoupon = (code) => {
-    const clean = code.trim().toUpperCase();
-    if (clean === 'BOGO' || clean === 'BUY1GET1' || clean === 'B1G1') {
-      setAppliedCoupon('BOGO');
-      const totalUnits = cart.reduce((sum, item) => sum + item.quantity, 0);
-      const freeUnits = Math.floor(totalUnits / 2);
-      if (freeUnits > 0) {
-        return {
-          success: true,
-          message: `Buy 1 Get 1 Applied: ${freeUnits} item${freeUnits > 1 ? 's' : ''} FREE!`,
-        };
-      }
-      return {
-        success: true,
-        message: 'BOGO code applied! Add 1 more item to get it 100% FREE.',
-      };
+  const applyCoupon = async (code) => {
+    const items = cart.map((item) => ({
+      productId: item.productId || item.product?._id || item.product?.id || item.id,
+      quantity: item.quantity || 1,
+      unitPrice: item.unitPrice || item.product?.price || 0,
+      configuration: item.configuration || {},
+    }));
+    const result = await couponApi.validate(code, items);
+    if (result?.success && result.data) {
+      setAppliedCoupon(result.data.code);
+      setAppliedCouponType(result.data.discountType);
+      setAppliedDiscount(result.data.discountAmount || 0);
+      setValidatedSubtotal(result.data.subtotal);
+      return { success: true, message: result.data.message };
     }
-    if (clean === 'VISION10') {
-      setAppliedCoupon('VISION10');
-      return {
-        success: true,
-        message: 'Coupon VISION10 applied: 10% discount on order!',
-      };
-    }
-    if (clean === 'BRIGHT20') {
-      setAppliedCoupon('BRIGHT20');
-      return {
-        success: true,
-        message: 'Coupon BRIGHT20 applied: 20% discount on orders above ₹3,000!',
-      };
-    }
-    if (clean === 'FIRSTHUT') {
-      setAppliedCoupon('FIRSTHUT');
-      return {
-        success: true,
-        message: 'Welcome voucher applied: ₹300 flat discount!',
-      };
-    }
-    return {
-      success: false,
-      message: 'Invalid or expired coupon code. Try BOGO, VISION10 or FIRSTHUT',
-    };
+    return { success: false, message: result?.message || 'Could not validate this coupon.' };
   };
-
   const removeCoupon = () => {
     setAppliedCoupon(null);
+    setAppliedCouponType(null);
+    setAppliedDiscount(0);
+    setValidatedSubtotal(null);
     toast.info('Coupon code removed');
   };
 
   const clearCart = () => {
     setCart([]);
     setAppliedCoupon(null);
+    setAppliedCouponType(null);
+    setAppliedDiscount(0);
+    setValidatedSubtotal(null);
     if (user && localStorage.getItem('thelenshut_auth_token')) {
       cartApi.clearCart().catch((err) => {
         console.warn('Backend clear cart warning:', err);
@@ -409,23 +417,15 @@ export const CartProvider = ({ children }) => {
   };
 
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const subtotal = cart.reduce(
+  const calculatedSubtotal = cart.reduce(
     (sum, item) => sum + (item.unitPrice || item.product?.price || 0) * item.quantity,
     0
   );
+  const subtotal = appliedCoupon && validatedSubtotal != null ? validatedSubtotal : calculatedSubtotal;
 
-  let discount = 0;
-  if (appliedCoupon === 'BOGO' || appliedCoupon === 'BUY1GET1' || appliedCoupon === 'B1G1') {
-    discount = calculateBogoDiscount(cart);
-  } else if (appliedCoupon === 'VISION10') {
-    discount = Math.round(subtotal * 0.1);
-  } else if (appliedCoupon === 'BRIGHT20') {
-    discount = subtotal >= 3000 ? Math.round(subtotal * 0.2) : 0;
-  } else if (appliedCoupon === 'FIRSTHUT') {
-    discount = Math.min(subtotal, 300);
-  }
+  const discount = appliedDiscount;
 
-  const shipping = subtotal > 999 || subtotal === 0 ? 0 : 99;
+  const shipping = subtotal >= 999 || subtotal === 0 ? 0 : 99;
   const total = Math.max(0, subtotal - discount + shipping);
 
   return (
@@ -437,6 +437,7 @@ export const CartProvider = ({ children }) => {
         discount,
         couponCode: appliedCoupon || '',
         appliedCoupon,
+        appliedCouponType,
         shipping,
         total,
         isLoading,

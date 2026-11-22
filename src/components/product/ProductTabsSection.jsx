@@ -233,10 +233,10 @@ export const ProductTabsSection = ({ product }) => {
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
                 <div className="flex items-center gap-2 text-slate-800 font-extrabold text-sm">
                   <Truck size={18} className="text-[#E4232C]" />
-                  <span>Free Express Shipping</span>
+                  <span>Free Shipping on Orders ₹999+</span>
                 </div>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  We offer free courier delivery on all orders above ₹999. Eyeglasses and customized prescription orders are lab-assembled and dispatched within 24 to 48 hours.
+                  Shipping is free on orders above ₹999 and costs ₹99 on smaller orders. Customized prescription orders are assembled to order.
                 </p>
               </div>
 
@@ -314,7 +314,7 @@ export const ProductTabsSection = ({ product }) => {
                   verified: true,
                   rating: 5,
                   date: '1 month ago',
-                  title: 'Perfect prescription accuracy and fast delivery',
+                  title: 'Perfect prescription accuracy and careful handling',
                   comment:
                     'I uploaded my doctor prescription and received the glasses in 3 days. The alignment and pupillary distance are spot-on. Lightweight and beautiful finish.'
                 }
@@ -432,7 +432,7 @@ export const ProductTabsSection = ({ product }) => {
 
                   {tab.id === 'shipping' && (
                     <div className="space-y-2">
-                      <p><strong>Free Express Delivery:</strong> 2 to 4 business days on all orders.</p>
+                      <p><strong>Shipping:</strong> Free on orders above ₹999; ₹99 otherwise.</p>
                       <p><strong>7-Day Returns:</strong> Easy doorstep returns if the frame fit isn't right.</p>
                     </div>
                   )}

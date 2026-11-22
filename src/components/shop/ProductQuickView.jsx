@@ -106,7 +106,7 @@ export const ProductQuickView = ({
               </div>
               <div className="flex items-center gap-1.5">
                 <Truck size={14} className="text-slate-600" />
-                <span>Free Express Shipping</span>
+                <span>Free Shipping on Orders ₹999+</span>
               </div>
               <Link to={`/product/${product.slug}`} onClick={onClose} className="font-semibold text-[#E4232C] hover:underline">
                 Full Details →

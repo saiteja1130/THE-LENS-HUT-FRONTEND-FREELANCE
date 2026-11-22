@@ -16,21 +16,6 @@ export const ProductDetailsInfo = ({ product }) => {
   const [deliveryResult, setDeliveryResult] = useState(null);
   const [isCheckingPincode, setIsCheckingPincode] = useState(false);
 
-  // Calculate realistic delivery dates (3 to 5 business days from now)
-  const getDeliveryEstimates = () => {
-    const today = new Date();
-    const minDays = new Date(today);
-    minDays.setDate(today.getDate() + 3);
-    const maxDays = new Date(today);
-    maxDays.setDate(today.getDate() + 5);
-
-    const options = { weekday: 'short', month: 'short', day: 'numeric' };
-    return {
-      min: minDays.toLocaleDateString('en-IN', options),
-      max: maxDays.toLocaleDateString('en-IN', options),
-    };
-  };
-
   const handlePincodeCheck = (e) => {
     e.preventDefault();
     if (!pincode || pincode.trim().length !== 6 || isNaN(pincode)) {
@@ -43,17 +28,14 @@ export const ProductDetailsInfo = ({ product }) => {
 
     setIsCheckingPincode(true);
     setTimeout(() => {
-      const dates = getDeliveryEstimates();
       setDeliveryResult({
         valid: true,
         pincode: pincode.trim(),
-        message: `Express Delivery by ${dates.min} - ${dates.max}`,
+        message: `Delivery is available to PIN code ${pincode.trim()}.`,
       });
       setIsCheckingPincode(false);
     }, 400);
   };
-
-  const defaultDates = getDeliveryEstimates();
 
   return (
     <div className="space-y-4">

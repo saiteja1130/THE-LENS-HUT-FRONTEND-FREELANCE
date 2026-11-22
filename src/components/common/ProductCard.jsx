@@ -152,9 +152,6 @@ export const ProductCard = ({
                 </span>
               )}
             </div>
-            <div className="text-[11px] text-emerald-600 font-semibold pt-0.5">
-              Free Express Delivery
-            </div>
           </div>
 
           <div className="flex items-center gap-2">

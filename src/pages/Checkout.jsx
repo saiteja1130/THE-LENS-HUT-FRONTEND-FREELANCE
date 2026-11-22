@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   CheckCircle2,
@@ -11,8 +11,6 @@ import {
   Sparkles,
   CreditCard,
   QrCode,
-  Banknote,
-  Truck,
   Glasses,
   Package,
   Sun,
@@ -25,6 +23,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useNotification } from '../context/NotificationContext';
 import { paymentApi } from '../services/paymentApi';
+import { couponApi } from '../services/couponApi';
 
 export const Checkout = () => {
   const { toast } = useNotification();
@@ -35,16 +34,15 @@ export const Checkout = () => {
     shipping: cartShipping,
     total: cartTotal,
     appliedCoupon,
+    appliedCouponType,
     applyCoupon,
     removeCoupon,
     clearCart,
-    calculateBogoDiscount
   } = useCart();
 
   const {
     user,
     isAuthenticated,
-    placeOrder
   } = useAuth();
 
   const navigate = useNavigate();
@@ -59,9 +57,7 @@ export const Checkout = () => {
   const [state, setState] = useState('');
   const [pincode, setPincode] = useState('');
 
-  // Shipping & Payment selection
-  const [shippingMethod, setShippingMethod] = useState('standard');
-  const [paymentMethod, setPaymentMethod] = useState('upi');
+  // Payment selection
   const [confirmedOrder, setConfirmedOrder] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -71,13 +67,18 @@ export const Checkout = () => {
 
   const [couponInput, setCouponInput] = useState('');
   const [couponStatus, setCouponStatus] = useState(null);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
 
-  const handleApplyCoupon = (e, codeToApply) => {
+  useEffect(() => {
+    couponApi.getActive().then(setAvailableCoupons).catch(() => setAvailableCoupons([]));
+  }, []);
+
+  const handleApplyCoupon = async (e, codeToApply) => {
     if (e) e.preventDefault();
     const code = (codeToApply || couponInput).trim().toUpperCase();
     if (!code) return;
 
-    const res = applyCoupon(code);
+    const res = await applyCoupon(code);
     if (res.success) {
       setCouponStatus({ type: 'success', message: res.message });
       setCouponInput('');
@@ -93,31 +94,15 @@ export const Checkout = () => {
     setCouponStatus(null);
   };
 
-  // Dynamic financial calculations with BOGO support
   const rawSubtotal = displayItems.reduce(
     (sum, item) => sum + (item.product?.price || item.unitPrice || 0) * (item.quantity || 1),
     0
   );
 
-  let activeDiscount = 0;
-  if (appliedCoupon === 'BOGO' || appliedCoupon === 'BUY1GET1' || appliedCoupon === 'B1G1') {
-    activeDiscount = calculateBogoDiscount ? calculateBogoDiscount(displayItems) : 0;
-  } else if (appliedCoupon === 'VISION10') {
-    activeDiscount = Math.round(rawSubtotal * 0.1);
-  } else if (appliedCoupon === 'BRIGHT20') {
-    activeDiscount = rawSubtotal >= 3000 ? Math.round(rawSubtotal * 0.2) : 0;
-  } else if (appliedCoupon === 'FIRSTHUT') {
-    activeDiscount = Math.min(rawSubtotal, 300);
-  } else if (hasCartItems) {
-    activeDiscount = cartDiscount;
-  } else {
-    activeDiscount = 0;
-  }
-
-  const subtotal = rawSubtotal;
-  const discount = activeDiscount;
-  const shipping = subtotal > 999 || subtotal === 0 ? 0 : 99;
-  const total = Math.max(0, subtotal - discount + (shippingMethod === 'express' ? 149 : shipping));
+  const subtotal = appliedCoupon ? cartSubtotal : rawSubtotal;
+  const discount = cartDiscount;
+  const shipping = subtotal >= 999 || subtotal === 0 ? 0 : 99;
+  const total = Math.max(0, subtotal - discount + shipping);
 
   const handlePlaceOrder = async (e) => {
     e.preventDefault();
@@ -146,10 +131,7 @@ export const Checkout = () => {
       isDefault: true
     };
 
-    const paymentLabel =
-      paymentMethod === 'upi'
-        ? 'UPI / Dynamic QR Scanner (Razorpay)'
-        : 'Cash on Delivery';
+    const paymentLabel = 'Online Payment (Razorpay)';
 
     await new Promise((r) => setTimeout(r, 800));
 
@@ -176,8 +158,8 @@ export const Checkout = () => {
       discount,
       discountAmount: discount,
       couponCode: appliedCoupon || '',
-      shipping: shippingMethod === 'express' ? 149 : shipping,
-      shippingFee: shippingMethod === 'express' ? 149 : shipping,
+      shipping,
+      shippingFee: shipping,
       total,
       totalAmount: total,
       customerEmail: contactEmail,
@@ -185,29 +167,7 @@ export const Checkout = () => {
       customerName: fullName,
     };
 
-    // If Cash on Delivery is selected, create order directly
-    if (paymentMethod === 'cod') {
-      try {
-        const newOrder = await placeOrder({
-          ...orderPayload,
-          paymentMethod: 'Cash on Delivery',
-        });
-
-        if (hasCartItems) {
-          clearCart();
-        }
-        setIsProcessing(false);
-        setConfirmedOrder(newOrder);
-        toast.success('Your order has been placed successfully via Cash on Delivery!');
-      } catch (orderErr) {
-        console.error('[Checkout] Error placing COD order:', orderErr);
-        setIsProcessing(false);
-        toast.error('An error occurred while creating your order. Please try again.');
-      }
-      return;
-    }
-
-    // Online Payment via Razorpay Standard Web Checkout (UPI & Scanner Only)
+    // Online payment via Razorpay Standard Web Checkout
     const razorpayKey = import.meta.env.VITE_RAZORPAY_KEY_ID;
     if (!razorpayKey) {
       setIsProcessing(false);
@@ -237,38 +197,18 @@ export const Checkout = () => {
         return;
       }
 
-      // Step 2: Open Razorpay Checkout Modal restricted STRICTLY to UPI & QR Scanner
+      // Step 2: Open Razorpay Checkout with the payment methods enabled for this account
       const options = {
         key: razorpayKey,
         amount: createRes.amount,
         currency: createRes.currency || 'INR',
         name: 'The Lens Hut',
-        description: 'UPI & QR Code Scanner Payment',
+        description: 'Secure online payment',
         order_id: createRes.order_id,
         prefill: {
           name: fullName,
           email: contactEmail,
           contact: contactPhone,
-          method: 'upi',
-        },
-        config: {
-          display: {
-            blocks: {
-              upi: {
-                name: 'Pay using UPI / QR Scanner',
-                instruments: [
-                  {
-                    method: 'upi',
-                    flows: ['qr', 'intent', 'collect'],
-                  },
-                ],
-              },
-            },
-            sequence: ['block.upi'],
-            preferences: {
-              show_default_blocks: false,
-            },
-          },
         },
         theme: {
           color: '#14232E',
@@ -609,113 +549,42 @@ export const Checkout = () => {
               </div>
             </div>
 
-            {/* Step 3: Shipping Method */}
-            <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-3">
-              <h2 className="text-base font-bold text-[#14232E] flex items-center gap-2.5 pb-3 border-b border-slate-100">
-                <span className="w-6 h-6 rounded-full bg-[#14232E] text-white text-xs flex items-center justify-center font-bold">
-                  3
-                </span>
-                <span>Shipping Method</span>
-              </h2>
-
-              <div className="p-4 rounded-xl border border-emerald-200/80 bg-emerald-50/50 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                    <Truck size={18} />
-                  </div>
-                  <div>
-                    <span className="text-xs sm:text-sm font-bold text-[#14232E] block">
-                      Standard Express Optical Delivery (3-5 business days)
-                    </span>
-                    <span className="text-[11px] text-slate-500">
-                      Safe temperature-controlled eyewear logistics
-                    </span>
-                  </div>
-                </div>
-                <span className="text-xs font-bold text-emerald-700 bg-white px-2.5 py-1 rounded-full border border-emerald-200 shadow-2xs">
-                  FREE
-                </span>
-              </div>
-            </div>
-
-            {/* Step 4: Payment Method */}
+            {/* Step 3: Payment Method */}
             <div className="bg-white border border-slate-200/80 rounded-2xl p-5 sm:p-6 shadow-xs space-y-4">
               <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                 <h2 className="text-base font-bold text-[#14232E] flex items-center gap-2.5">
                   <span className="w-6 h-6 rounded-full bg-[#14232E] text-white text-xs flex items-center justify-center font-bold">
-                    4
+                    3
                   </span>
                   <span>Payment Method</span>
                 </h2>
                 <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
-                  Instant UPI & QR Scanner
+                  Multiple payment options
                 </span>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {/* UPI / QR Scanner Radio Card */}
-                <label
-                  onClick={() => setPaymentMethod('upi')}
-                  className={`p-4 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
-                    paymentMethod === 'upi'
-                      ? 'border-[#14232E] bg-slate-50/80 ring-1 ring-[#14232E] shadow-2xs'
-                      : 'border-slate-200 bg-white hover:border-slate-300'
-                  }`}
-                >
+              <div className="grid grid-cols-1 gap-3">
+                {/* Razorpay online payment radio card */}
+                <div className="p-4 rounded-xl border border-[#14232E] bg-slate-50/80 ring-1 ring-[#14232E] flex flex-col justify-between">
                   <div className="flex items-center justify-between mb-2">
                     <div className="w-8 h-8 rounded-lg bg-red-50 text-[#E4232C] flex items-center justify-center">
                       <QrCode size={18} />
                     </div>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="upi"
-                      checked={paymentMethod === 'upi'}
-                      onChange={() => setPaymentMethod('upi')}
-                      className="w-4 h-4 accent-[#E4232C] cursor-pointer"
-                    />
+                    <CheckCircle2 size={18} className="text-emerald-600" />
                   </div>
                   <div>
-                    <span className="text-xs font-bold text-[#14232E] block">UPI & QR Code Scanner</span>
+                    <span className="text-xs font-bold text-[#14232E] block">Online Payment</span>
                     <span className="text-[10px] text-slate-500">
-                      Scan with GPay, PhonePe, Paytm, BHIM, CRED or any UPI App
+                      UPI, cards, netbanking, wallets and other available methods
                     </span>
                   </div>
-                </label>
-
-                {/* Cash on Delivery Radio Card */}
-                <label
-                  onClick={() => setPaymentMethod('cod')}
-                  className={`p-4 rounded-xl border flex flex-col justify-between cursor-pointer transition-all ${
-                    paymentMethod === 'cod'
-                      ? 'border-[#14232E] bg-slate-50/80 ring-1 ring-[#14232E] shadow-2xs'
-                      : 'border-slate-200 bg-white hover:border-slate-300'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="w-8 h-8 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center">
-                      <Banknote size={18} />
-                    </div>
-                    <input
-                      type="radio"
-                      name="paymentMethod"
-                      value="cod"
-                      checked={paymentMethod === 'cod'}
-                      onChange={() => setPaymentMethod('cod')}
-                      className="w-4 h-4 accent-[#E4232C] cursor-pointer"
-                    />
-                  </div>
-                  <div>
-                    <span className="text-xs font-bold text-[#14232E] block">Cash on Delivery</span>
-                    <span className="text-[10px] text-slate-400">Pay cash upon delivery</span>
-                  </div>
-                </label>
+                </div>
               </div>
 
               {/* Security Footnote */}
               <div className="flex items-center gap-2 text-xs text-slate-500 pt-1">
                 <Lock size={14} className="text-emerald-600 shrink-0" />
-                <span>UPI & QR Scanner checkout secured and encrypted by Razorpay.</span>
+                <span>Online checkout secured and encrypted by Razorpay.</span>
               </div>
             </div>
 
@@ -836,12 +705,8 @@ export const Checkout = () => {
                           {appliedCoupon}
                         </span>
                         <span className="text-[11px] text-emerald-700 block">
-                          {appliedCoupon === 'BOGO' || appliedCoupon === 'BUY1GET1' || appliedCoupon === 'B1G1'
+                          {appliedCouponType === 'Buy One Get One'
                             ? 'Buy 1 Get 1 Free applied'
-                            : appliedCoupon === 'VISION10'
-                            ? '10% order discount applied'
-                            : appliedCoupon === 'BRIGHT20'
-                            ? '20% discount applied'
                             : 'Coupon discount applied'}
                         </span>
                       </div>
@@ -870,7 +735,7 @@ export const Checkout = () => {
                             handleApplyCoupon(null, couponInput);
                           }
                         }}
-                        placeholder="e.g. BOGO, VISION10"
+                        placeholder="Enter coupon code"
                         className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-[#14232E] uppercase placeholder:normal-case placeholder:font-normal placeholder:text-slate-400 focus:outline-none focus:border-[#14232E] focus:bg-white transition-all"
                       />
                     </div>
@@ -895,44 +760,24 @@ export const Checkout = () => {
                   </p>
                 )}
 
-                {/* Quick Coupon Chips including BOGO */}
+                {/* Active coupons are managed from the admin panel */}
                 {!appliedCoupon && (
                   <div className="pt-0.5">
-                    <span className="text-[10px] text-slate-400 font-medium block mb-1.5">
-                      Available offers:
-                    </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      <button
-                        type="button"
-                        onClick={() => handleApplyCoupon(null, 'BOGO')}
-                        className="group flex items-center gap-1 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 border border-amber-200/90 text-amber-900 rounded-lg text-[11px] font-bold transition-all cursor-pointer shadow-2xs"
-                        title="Click to apply Buy 1 Get 1 Free"
-                      >
-                        <Gift size={11} className="text-amber-600" />
-                        <span>BOGO</span>
-                        <span className="font-normal text-[10px] text-amber-700 hidden sm:inline">(Buy 1 Get 1)</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleApplyCoupon(null, 'VISION10')}
-                        className="flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
-                        title="Click to apply 10% off"
-                      >
-                        <span>VISION10</span>
-                        <span className="font-normal text-[10px] text-slate-500">(10% Off)</span>
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => handleApplyCoupon(null, 'FIRSTHUT')}
-                        className="flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-bold transition-colors cursor-pointer"
-                        title="Click to apply ₹300 off"
-                      >
-                        <span>FIRSTHUT</span>
-                        <span className="font-normal text-[10px] text-slate-500">(₹300 Off)</span>
-                      </button>
-                    </div>
+                    <span className="text-[10px] text-slate-400 font-medium block mb-1.5">Available offers:</span>
+                    {availableCoupons.length ? (
+                      <div className="flex flex-wrap gap-1.5">
+                        {availableCoupons.map((coupon) => (
+                          <button key={coupon.code} type="button" onClick={() => handleApplyCoupon(null, coupon.code)}
+                            className="flex items-center gap-1 px-2.5 py-1 bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-bold transition-colors cursor-pointer">
+                            {coupon.discountType === 'Buy One Get One' && <Gift size={11} className="text-amber-600" />}
+                            <span>{coupon.code}</span>
+                            <span className="font-normal text-[10px] text-slate-500">
+                              {coupon.discountType === 'Buy One Get One' ? '(Buy 1 Get 1)' : coupon.discountType === 'Percentage' ? `(${coupon.discountValue}% off)` : `(₹${coupon.discountValue} off)`}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : <span className="text-[11px] text-slate-400">No active offers right now.</span>}
                   </div>
                 )}
               </div>
@@ -951,7 +796,7 @@ export const Checkout = () => {
                       <span>Discount</span>
                       {appliedCoupon && (
                         <span className="text-[10px] font-extrabold text-[#E4232C] bg-rose-50 px-1.5 py-0.5 rounded uppercase">
-                          {appliedCoupon === 'BOGO' ? 'BOGO Free' : appliedCoupon}
+                          {appliedCouponType === 'Buy One Get One' ? 'Buy 1 Get 1' : appliedCoupon}
                         </span>
                       )}
                     </span>
@@ -961,7 +806,7 @@ export const Checkout = () => {
                   </div>
                 )}
                 <div className="flex justify-between items-center text-slate-600">
-                  <span>Express Delivery</span>
+                  <span>Shipping</span>
                   <span className="font-bold text-emerald-700">
                     {shipping === 0 ? 'FREE' : `₹${shipping}`}
                   </span>
@@ -990,7 +835,7 @@ export const Checkout = () => {
                     <span>Processing Order...</span>
                   </div>
                 ) : (
-                  <span>{paymentMethod === 'cod' ? 'Place Cash on Delivery Order' : 'Pay ₹' + total.toLocaleString('en-IN') + ' via UPI / QR Scanner'}</span>
+                  <span>{'Pay ₹' + total.toLocaleString('en-IN') + ' with Razorpay'}</span>
                 )}
               </button>
 

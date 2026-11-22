@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authApi } from '../services/authApi';
-import { orderApi } from '../services/orderApi';
 const AuthContext = createContext(undefined);
 export const AuthProvider = ({
   children
@@ -219,27 +218,6 @@ export const AuthProvider = ({
       ...data
     } : null);
   };
-  const placeOrder = async (orderData) => {
-    const apiResponse = await orderApi.createOrder(orderData);
-    if (apiResponse?.success && apiResponse?.data) {
-      const serverOrder = apiResponse.data;
-      const normalizedOrder = {
-        ...serverOrder,
-        id: serverOrder._id || serverOrder.id || serverOrder.orderNumber,
-        date: new Date(serverOrder.createdAt || serverOrder.orderDate || Date.now()).toLocaleDateString('en-GB', {
-          day: '2-digit',
-          month: 'short',
-          year: 'numeric'
-        }),
-      };
-
-      setOrders((prev) => [normalizedOrder, ...prev]);
-      return normalizedOrder;
-    }
-
-    throw new Error(apiResponse?.message || 'Failed to place order on server.');
-  };
-
   return <AuthContext.Provider value={{
     user,
     isAuthenticated: !!user,
@@ -254,8 +232,7 @@ export const AuthProvider = ({
     logout,
     forgotPassword,
     resetPassword,
-    updateProfile,
-    placeOrder
+    updateProfile
   }}>
       {children}
     </AuthContext.Provider>;

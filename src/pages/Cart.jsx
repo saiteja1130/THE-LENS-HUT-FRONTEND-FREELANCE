@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Trash2,
@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { Breadcrumbs } from '../components/common/Breadcrumbs';
 import { useCart } from '../context/CartContext';
+import { couponApi } from '../services/couponApi';
 
 export const Cart = () => {
   const {
@@ -33,11 +34,17 @@ export const Cart = () => {
   const navigate = useNavigate();
   const [couponInput, setCouponInput] = useState('');
   const [couponFeedback, setCouponFeedback] = useState(null);
+  const [availableCoupons, setAvailableCoupons] = useState([]);
 
-  const handleApplyCoupon = (e) => {
-    e.preventDefault();
-    if (!couponInput.trim()) return;
-    const res = applyCoupon(couponInput);
+  useEffect(() => {
+    couponApi.getActive().then(setAvailableCoupons).catch(() => setAvailableCoupons([]));
+  }, []);
+
+  const handleApplyCoupon = async (e, codeToApply) => {
+    if (e) e.preventDefault();
+    const code = (codeToApply || couponInput).trim();
+    if (!code) return;
+    const res = await applyCoupon(code);
     setCouponFeedback(res.message);
     if (res.success) {
       setCouponInput('');
@@ -339,7 +346,7 @@ export const Cart = () => {
                   Order Summary
                 </h2>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Taxes and express shipping calculated
+                  Taxes and shipping calculated at checkout
                 </p>
               </div>
 
@@ -360,7 +367,7 @@ export const Cart = () => {
                 )}
 
                 <div className="flex justify-between">
-                  <span>Express Optical Delivery</span>
+                  <span>Shipping</span>
                   <span className="font-bold text-[#14232E]">
                     {shipping === 0 ? <span className="text-emerald-700 font-bold">FREE</span> : `₹${shipping}`}
                   </span>
@@ -382,7 +389,7 @@ export const Cart = () => {
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    placeholder="e.g. BOGO, VISION10"
+                    placeholder="Enter coupon code"
                     value={couponInput}
                     onChange={(e) => setCouponInput(e.target.value)}
                     className="flex-1 text-xs h-10 px-3.5 bg-white border border-slate-200 rounded-xl focus:outline-hidden focus:border-[#14232E] focus:ring-1 focus:ring-[#14232E] transition-all"
@@ -394,6 +401,16 @@ export const Cart = () => {
                     Apply
                   </button>
                 </div>
+                {availableCoupons.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5">
+                    {availableCoupons.map((coupon) => (
+                      <button key={coupon.code} type="button" onClick={() => handleApplyCoupon(null, coupon.code)}
+                        className="px-2 py-1 rounded-lg border border-slate-200 bg-slate-50 hover:bg-slate-100 text-[10px] font-bold text-slate-700">
+                        {coupon.code} · {coupon.discountType === 'Buy One Get One' ? 'Buy 1 Get 1' : coupon.discountType === 'Percentage' ? `${coupon.discountValue}% off` : `₹${coupon.discountValue} off`}
+                      </button>
+                    ))}
+                  </div>
+                )}
                 {couponFeedback && (
                   <div className="text-[11px] font-semibold text-slate-600 pt-1">
                     {couponFeedback}
